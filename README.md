@@ -6,28 +6,11 @@
 
 Cockpit ZFS Manager is currently pre-release software.
 
-#### Use at own risk!
-
-Not recommended for use on production systems.\
-Ensure all critical data is adequately backed up before use.
-
 ## Requirements
 
  * Cockpit: 201+
  * Samba: 4+
  * ZFS: 0.8+
-
-#### Tested Distributions:
-
-* Arch Linux
-* CentOS Linux 8.0
-* Debian 10.0
-* Fedora 31
-* Oracle Linux Server 8.0
-* Proxmox VE 6.0
-* Red Hat Enterprise Linux 8.0
-* Ubuntu 18.04 LTS
-* Ubuntu 19.10
 
 ## Installation
 
@@ -77,7 +60,6 @@ A Welcome to Cockpit ZFS Manager modal will display and allow you to configure i
 Note: Inline help is currently available in modals. Documentation will be created at a later date.
 
 
-
 ## Caveats
 
 #### Storage Pools
@@ -115,9 +97,6 @@ ZFS always creates shares in /var/lib/samba/usershares folder when ShareSMB prop
 
 If enabled, Cockpit ZFS Manager manages shares for the file systems only. Samba global configuration will need to be configured externally.
 ## More Information
-
-* [Roadmap](ROADMAP.md)
-* [ServeTheHome and ServeThe.Biz Forums](https://forums.servethehome.com/index.php?threads/25668/)
 
 ## Guides
 
