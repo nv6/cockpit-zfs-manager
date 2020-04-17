@@ -1,0 +1,49 @@
+// Allow any user in the 'zfsadmin' group to use zfs/zpool commands
+// without entering a password.
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.45drives.zfs.get" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.set" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.create" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.unmount" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.mount" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.rename" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.destroy" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.inherit" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.snapshot" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.clone" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zfs.rollback" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+});

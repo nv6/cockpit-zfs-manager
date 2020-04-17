@@ -1,0 +1,25 @@
+// Allow any user in the 'zfsadmin' group to use zfs/zpool commands
+// without entering a password.
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.45drives.zpool.import" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zpool.export" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zpool.create" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zpool.destroy" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+    if (action.id == "org.45drives.zpool.labelclear" &&
+        subject.isInGroup("zfsadmin")) {
+        return polkit.Result.YES;
+    }
+});
