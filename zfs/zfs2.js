@@ -161,7 +161,7 @@ function FnFirstStepsPrivileged() {
     //Execute functions when user is an administrator
 
     FnConfigurationDirectoryCreate();
-    //FnConfigurationDirectoryRuntimeCreate();
+    FnConfigurationDirectoryRuntimeCreate();
 
     if (!zfsmanager.user.configuration) {
         FnConfigurationLegacyGet();
@@ -914,23 +914,24 @@ function FnCockpitElementsDisable() {
 function FnCockpitSmbDisable() {
     let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
     FnConsole.log[2]("FnCockpitSmbDisable: " + zfsmanager.user.name );
-    
     // Disable buttons
-    $("#btn-configure").prop("title", message + " configure ZFS Manager").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("#btn-storagepools-filesystems-unlock").prop("title", message + " unlock file system").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-   
+    $("#btn-configure").addClass("disabled");
+    $("#btn-storagepools-filesystems-unlock").addClass("disabled");
     $("#btn-storagepools-create").prop("title", message + " create a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
     $("#btn-storagepools-import").prop("title", message + " import a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("[id^=btn-storagepool-configure-]").prop("title", message + " configuring storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("[id^=btn-storagepool-filesystem-configure-]").prop("title", message + " configuring file systems").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
+    $("#btn-storagepool-configure-test").prop("title", message + " configure a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
+    //$("[id^=btn-storagepool-filesystems-create-]").prop("title", message + " create a file system").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("disabled");
+    //$("[id^=btn-storagepool-snapshots-create-]").prop("title", message + " create a snapshot").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("disabled");
+    //$("[id^=btn-storagepool-snapshot-dropdown-]").prop("title", message + " manage this snapshot").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("disabled");
     $("[id^=btn-storagepool-status-dropdown-]").prop("title", message + " manage this storage pool").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("disabled");
 
-    //Enable Access to Some of Privileged buttons 
-    $("[id^=btn-storagepool-filesystem-samba-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-snapshot-create-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-rename-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-destroy-]").removeClass("disabled");
-    $("[id^=btn-storagepool-snapshot-]").removeClass("disabled");
+    //Disable privileged items
+    //$(".privileged").addClass("disabled");
+
+    //Disable privileged modal items
+    $(".privileged-modal").prop("disabled", true);
+    $(".privileged-modal button").prop("disabled", true);
+    $(".privileged-modal input").prop("disabled", true);
 
     //Disable sliders
     $("#validationwrapper-storagepools-create-refreservation .slider-pf .slider *").addClass("disabled");
@@ -1432,7 +1433,7 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 											        <th>Available</th>
 											        <th>Used</th>
 											        <th>Snapshots</th>
-                                                    <th>Refreservation</th>
+											        <th>Refreservation</th>
 											        <th>Record Size</th>
 											        <th>Compression</th>
 											        <th>Deduplication</th>
@@ -5075,11 +5076,9 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     break;
                 case 6: //6=recordsize
                     filesystem.recordsize = __value;
-                    if(zfsmanager.user.smb && !zfsmanager.user.admin && !zfsmanager.user.zfs){
-                        filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + "N/A" + `</td>`;
-                    } else {
-                        filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + FnFormatBytes({ base2: true, decimals: 0, value: __value }) + `</td>`;
-                    }
+
+                    filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + FnFormatBytes({ base2: true, decimals: 0, value: __value }) + `</td>`;
+
                     break;
                 case 7: //7=compression
                     filesystem.compression = __value;
@@ -7834,7 +7833,7 @@ function FnFileSystemCreate(pool = { name, id, altroot: false }, filesystem = { 
             filesystem.passphrase = filesystem.passphrase.replace(/\'/g, "\'\"\'\"\'");
         }
 
-        process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | pkexec /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
+        process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
     } else {
         process.command = ["/bin/sh", "-c", "pkexec /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
     }
@@ -8494,7 +8493,7 @@ function FnFileSystemSelinuxContextsSambaSet(pool = { name, id }, filesystem = {
 
 function FnFileSystemShareSmbDisable(pool = { name, id }, filesystem = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "set", "sharesmb=off", filesystem.name]
+        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "set", "sharesmb=off", filesystem.name]
     };
 
     FnConsole.log[2]("File Systems, Share SMB, Disable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
@@ -8515,7 +8514,7 @@ function FnFileSystemShareSmbDisable(pool = { name, id }, filesystem = { name, i
 
 function FnFileSystemShareSmbEnable(pool = { name, id }, filesystem = { name, id }) {
     let process = {
-        command: [ "pkexec", "/sbin/zfs", "set", "sharesmb=on", filesystem.name]
+        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "set", "sharesmb=on", filesystem.name]
     };
 
     FnConsole.log[2]("File Systems, Share SMB, Enable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
@@ -11447,7 +11446,7 @@ function FnSambaConfigurationReload() {
 
 function FnSambaConfigurationZfsSharesEnable() {
     let process = {
-        command: ["/bin/sh", "-c", `[ -s /etc/samba/smb.conf ] && /usr/bin/awk -v k='\n\t# COCKPIT ZFS MANAGER\n\t# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION\n\tinclude = /etc/cockpit/zfs/shares.conf\n' '($1=="[global]"||x&&/^\\[/)&&!(x=!x){print k} END{if(x)print k}1' /etc/samba/smb.conf > /etc/samba/smb.tmp && /bin/mv -f /etc/samba/smb.tmp /etc/samba/smb.conf \|\| { echo '/etc/samba/smb.conf file does not exist or is empty.' ; exit 1; }`]
+        command: ["/bin/sh", "-c", `[ -s /etc/samba/smb.conf ] && /usr/bin/awk -v k='\n\t# COCKPIT ZFS MANAGER\n\t# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION\n\tinclude = /etc/cockpit/zfs/shares.conf\n\tinclude = /run/cockpit/zfs/shares.conf\n' '($1=="[global]"||x&&/^\\[/)&&!(x=!x){print k} END{if(x)print k}1' /etc/samba/smb.conf > /etc/samba/smb.tmp && /bin/mv -f /etc/samba/smb.tmp /etc/samba/smb.conf \|\| { echo '/etc/samba/smb.conf file does not exist or is empty.' ; exit 1; }`]
     };
 
     FnConsole.log[2]("Samba, Configuration, ZFS Shares, Enable: In Progress");
@@ -11466,7 +11465,7 @@ function FnSambaConfigurationZfsSharesEnable() {
 
 function FnSambaConfigurationZfsSharesGet() {
     let process = {
-        command: ["/bin/sh", "-c", "/bin/grep -Pzoq '(?s)include = /etc/cockpit/zfs/shares.conf' /etc/samba/smb.conf && echo true || echo false"]
+        command: ["/bin/sh", "-c", "/bin/grep -Pzoq '(?s)include = /etc/cockpit/zfs/shares.conf.*/run/cockpit/zfs/shares.conf' /etc/samba/smb.conf && echo true || echo false"]
     };
 
     FnConsole.log[2]("Samba, Configuration, ZFS Shares, Get: In Progress");
@@ -11511,7 +11510,7 @@ function FnSambaRestart() {
     FnConsole.log[2]("Samba, Restart: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, Restart: Success");
         })
@@ -11832,7 +11831,7 @@ function FnSambaShareEnableMountpointGet(pool = { name, id, altroot: false, read
 
 function FnSambaShareNamesGet(samba = { zfsonly: false }) {
     let process = {
-        command: ["/bin/sh", "-c", `/bin/cat /etc/cockpit/zfs/shares/*.conf ` + (!samba.zfsonly ? `/etc/samba/smb.conf ` : ``) + `2> /dev/null | /bin/grep "^\\\[.*\\\]$" || echo \\\$empty`]
+        command: ["/bin/sh", "-c", `/bin/cat /etc/cockpit/zfs/shares/*.conf /run/cockpit/zfs/shares/*.conf ` + (!samba.zfsonly ? `/etc/samba/smb.conf ` : ``) + `2> /dev/null | /bin/grep "^\\\[.*\\\]$" || echo \\\$empty`]
     };
 
     FnConsole.log[2]("Samba, Share, Names, Get: In Progress");
@@ -11921,7 +11920,7 @@ function FnSambaSharesDestroy(pool = { name, id, altroot: false, readonly: false
 
 function FnSambaSharesDestroyAll(samba = { restart: false }, display = { silent: false }, modal = { name }) {
     let process = {
-        command: ["/bin/sh", "-c", "echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /etc/cockpit/zfs/shares.conf  && /bin/rm -rf /etc/cockpit/zfs/shares/*.conf "],
+        command: ["/bin/sh", "-c", "echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /etc/cockpit/zfs/shares.conf && echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /run/cockpit/zfs/shares.conf && /bin/rm -rf /etc/cockpit/zfs/shares/*.conf && /bin/rm -rf /run/cockpit/zfs/shares/*.conf"],
         promise: cockpit.defer()
     };
 
@@ -12918,7 +12917,7 @@ function FnSambaZfsShareConfigureCommand(pool = { name, id }, filesystem = { nam
     FnConsole.log[2]("Samba, ZFS Share Configuration, Update: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Samba share configuration successfully updated", description: filesystem.name, breakword: false }, { name: "samba-configure-share", id: filesystem.id, timeout: 4 });
 
@@ -12980,7 +12979,7 @@ function FnSambaZfsShareEnable(pool = { name, id }, filesystem = { name, id, mou
 
 function FnSambaZfsSharesConfigurationReload() {
     let process = {
-        command: ["/bin/sh", "-c", "echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /etc/cockpit/zfs/shares.conf && /bin/ls /etc/cockpit/zfs/shares/*.conf 2> /dev/null | /bin/sed -e 's/^/include = /' >> /etc/cockpit/zfs/shares.conf"]
+        command: ["/bin/sh", "-c", "echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /etc/cockpit/zfs/shares.conf && /bin/ls /etc/cockpit/zfs/shares/*.conf 2> /dev/null | /bin/sed -e 's/^/include = /' >> /etc/cockpit/zfs/shares.conf && echo '# COCKPIT ZFS MANAGER\n# WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION' > /run/cockpit/zfs/shares.conf && /bin/ls /run/cockpit/zfs/shares/*.conf 2> /dev/null | /bin/sed -e 's/^/include = /' >> /run/cockpit/zfs/shares.conf"]
     };
 
     FnConsole.log[2]("Samba, ZFS Shares Configuration, Reload: In Progress");

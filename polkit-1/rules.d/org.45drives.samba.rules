@@ -2,7 +2,7 @@
 // without entering a password.
 
 polkit.addRule(function(action, subject) {
-    if (action.id == "org.45drives.samba.smbcontrol" &&
+    if ((action.id == "org.45drives.samba.smbcontrol") &&
         subject.isInGroup("smbadmin")) {
         return polkit.Result.YES;
     }

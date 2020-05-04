@@ -24,50 +24,6 @@ License along with this library.  If not, see
 -->
 
 <policyconfig>
-    <action id="org.45drives.zpool.import">
-      <description>zpool import</description>
-      <message>zpool import</message>
-      <defaults>
-        <allow_any>auth_admin</allow_any>
-        <allow_inactive>auth_admin</allow_inactive>
-        <allow_active>auth_admin</allow_active>
-      </defaults>
-      <annotate key="org.freedesktop.policykit.exec.path">/sbin/zpool</annotate>
-      <annotate key="org.freedesktop.policykit.exec.argv1">import</annotate>
-    </action>
-    <action id="org.45drives.zpool.export">
-      <description>zpool export</description>
-      <message>zpool export</message>
-      <defaults>
-        <allow_any>auth_admin</allow_any>
-        <allow_inactive>auth_admin</allow_inactive>
-        <allow_active>auth_admin</allow_active>
-      </defaults>
-      <annotate key="org.freedesktop.policykit.exec.path">/sbin/zpool</annotate>
-      <annotate key="org.freedesktop.policykit.exec.argv1">export</annotate>
-    </action>
-    <action id="org.45drives.zpool.create">
-      <description>zpool create </description>
-      <message>zpool create</message>
-      <defaults>
-        <allow_any>auth_admin</allow_any>
-        <allow_inactive>auth_admin</allow_inactive>
-        <allow_active>auth_admin</allow_active>
-      </defaults>
-      <annotate key="org.freedesktop.policykit.exec.path">/sbin/zpool</annotate>
-      <annotate key="org.freedesktop.policykit.exec.argv1">create</annotate>
-    </action>
-    <action id="org.45drives.zpool.destroy">
-      <description>zpool destroy</description>
-      <message>zpool destroy</message>
-      <defaults>
-        <allow_any>auth_admin</allow_any>
-	<allow_inactive>auth_admin</allow_inactive>
-        <allow_active>auth_admin</allow_active>
-      </defaults>
-      <annotate key="org.freedesktop.policykit.exec.path">/sbin/zpool</annotate>
-      <annotate key="org.freedesktop.policykit.exec.argv1">destroy</annotate>
-    </action>
     <action id="org.45drives.zpool.labelclear">
       <description>zpool labelclear</description>
       <message>zpool labelclear</message>
