@@ -13,7 +13,8 @@ polkit.addRule(function(action, subject) {
         action.id == "org.45drives.zfs.inherit"    ||
         action.id == "org.45drives.zfs.snapshot"   ||
         action.id == "org.45drives.zfs.clone"      ||
-        action.id == "org.45drives.zfs.rollback")  &&
+        action.id == "org.45drives.zfs.rollback"   ||
+        action.id == "org.45drives.zfs.loadkey")  &&
         subject.isInGroup("smbadmin")) {
         return polkit.Result.YES;
     }

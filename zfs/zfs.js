@@ -50,6 +50,9 @@ let zfsmanager = {
                 readonlylockdown: false, //Prevent changes to read only file systems and clone file systems
                 snapshotactions: true, //Display snapshot actions in file system actions menu
             },
+            snapshot: {
+                filesystemlist: true //Display snapshots in lists by file system
+            },
             status: {
                 errorcolors: true, //Display warning and danger colors for error counts
                 trimunsupported: false //Display TRIM unsupported message
@@ -58,8 +61,9 @@ let zfsmanager = {
                 activetab: 1, //Default active tab for storage pool. 1=File Systems, 2=Snapshots, 3=Status
                 boot: true, //Display boot storage pool
                 bootlockdown: true, //Prevent changes to boot storage pool. Changes may cause an unbootable system
-                root: true, //Display root storage pool
-                refreshall: false //Refresh all components
+                count: true, //Display file systems and snapshots count
+                refreshall: false, //Refresh all components
+                root: true //Display root storage pool
             }
         }
     },
@@ -73,7 +77,7 @@ let zfsmanager = {
         configuration: false,
         name: ""
     },
-    version: "0.2.0.233",
+    version: "0.3.1.301",
     zfs: {
         storagepool: {
             boot: "",
@@ -195,7 +199,7 @@ $(document).on("click", "#btn-storagepools-refresh", function () {
     FnStoragePoolsGet();
 });
 
-$(document).on("click", "#table-storagepools tr.listing-ct-item", function (element) {
+$(document).on("click", "#table-storagepools > tbody > tr.listing-ct-item", function (element) {
     if (!$(this).hasClass("listing-ct-storagepoolsnotfound") && !$(element.target).is("a, button, .fa.fa-ellipsis-v, input")) {
         if (!$(this).parent().hasClass("open")) {
             $(this).parent().addClass("open");
@@ -613,11 +617,14 @@ function FnConfigurationGet() {
                 user.zfs.filesystem.cloneorigin = (user.zfs.filesystem.cloneorigin === undefined ? zfsmanager.configuration.zfs.filesystem.cloneorigin : user.zfs.filesystem.cloneorigin);
                 user.zfs.filesystem.quotarestrict = (user.zfs.filesystem.quotarestrict === undefined ? zfsmanager.configuration.zfs.filesystem.quotarestrict : user.zfs.filesystem.quotarestrict);
                 user.zfs.filesystem.readonlylockdown = (user.zfs.filesystem.readonlylockdown === undefined ? zfsmanager.configuration.zfs.filesystem.readonlylockdown : user.zfs.filesystem.readonlylockdown);
+                user.zfs.snapshot = (user.zfs.snapshot === undefined ? zfsmanager.configuration.zfs.snapshot : user.zfs.snapshot);
+                user.zfs.snapshot.filesystemlist = (user.zfs.snapshot.filesystemlist === undefined ? zfsmanager.configuration.zfs.snapshot.filesystemlist : user.zfs.snapshot.filesystemlist);
                 user.zfs.status = (user.zfs.status === undefined ? zfsmanager.configuration.zfs.status : user.zfs.status);
                 user.zfs.status.errorcolors = (user.zfs.status.errorcolors === undefined ? zfsmanager.configuration.zfs.status.errorcolors : user.zfs.status.errorcolors);
                 user.zfs.status.trimunsupported = (user.zfs.status.trimunsupported === undefined ? zfsmanager.configuration.zfs.status.trimunsupported : user.zfs.status.trimunsupported);
                 user.zfs.storagepool = (user.zfs.storagepool === undefined ? zfsmanager.configuration.zfs.storagepool : user.zfs.storagepool);
                 user.zfs.storagepool.activetab = (user.zfs.storagepool.activetab === undefined ? zfsmanager.configuration.zfs.storagepool.activetab : user.zfs.storagepool.activetab);
+                user.zfs.storagepool.count = (user.zfs.storagepool.count === undefined ? zfsmanager.configuration.zfs.storagepool.count : user.zfs.storagepool.count);
                 user.zfs.storagepool.boot = (user.zfs.storagepool.boot === undefined ? zfsmanager.configuration.zfs.storagepool.boot : user.zfs.storagepool.boot);
                 user.zfs.storagepool.bootlockdown = (user.zfs.storagepool.bootlockdown === undefined ? zfsmanager.configuration.zfs.storagepool.bootlockdown : user.zfs.storagepool.bootlockdown);
                 user.zfs.storagepool.root = (user.zfs.storagepool.root === undefined ? zfsmanager.configuration.zfs.storagepool.root : user.zfs.storagepool.root);
@@ -639,13 +646,12 @@ function FnConfigurationGet() {
         });
 };
 
-function FnConfigure(user = { cockpit: { manage: true }, disks: { base2: false }, loglevel: 1, samba: { manage: true, windowscompatibility: true }, updates: { check: true }, zfs: { filesystem: { cloneorigin: false, quotarestrict: true, readonlylockdown: true, snapshotactions: true }, status: { errorcolors: true, trimunsupported: false }, storagepool: { activetab: 1, boot: true, bootlockdown: true, refreshall: false, root: true } } }, modal = { name, welcome: false }) {
-    let process = {
+function FnConfigure(user = { cockpit: { manage: true }, disks: { base2: false }, loglevel: 1, samba: { manage: true, windowscompatibility: true }, updates: { check: true }, zfs: { filesystem: { cloneorigin: false, quotarestrict: true, readonlylockdown: true, snapshotactions: true }, snapshot: { filesystemlist: true }, status: { errorcolors: true, trimunsupported: false }, storagepool: { activetab: 1, boot: true, bootlockdown: true, count: true, refreshall: false, root: true } } }, modal = { name, welcome: false }) {    let process = {
         command: ["/bin/sh", "-c", "echo '" + JSON.stringify(user, null, "  ").replace(/^\{\n/, `{\n  "#1": "COCKPIT ZFS MANAGER",\n  "#2": "WARNING: DO NOT EDIT, AUTO-GENERATED CONFIGURATION",\n`) + "' > /etc/cockpit/zfs/config.json"]
     };
 
     FnConsole.log[2]("Cockpit ZFS Manager, Configure: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     $("#spinner-" + modal.name + " span").text("Saving configuration...");
 
@@ -691,7 +697,7 @@ function FnConfigurationDirectoryCreate() {
     };
 
     FnConsole.log[2]("Cockpit ZFS Manager, Configuration Directory, Create: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function (data) {
@@ -877,7 +883,7 @@ function FnVersionWarning() {
 
 function FnCockpitElementsDisable() {
     let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
-
+    FnConsole.log[2]( "IN FnCockpitElementsDisable: " + zfsmanager.user.name );
     //Disable buttons
     $("#btn-configure").addClass("disabled");
     $("#btn-storagepools-filesystems-unlock").addClass("disabled");
@@ -911,9 +917,45 @@ function FnCockpitElementsDisable() {
     $("[id^=btn-storagepool-filesystem-unlock-icon-]").removeClass("pficon-ct-locked");
 }
 
+function FnCockpitElementsEnable() {
+    let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
+    FnConsole.log[2]( "IN FnCockpitElementsEnable: " + zfsmanager.user.name );
+    //Disable buttons
+    $("#btn-configure").addClass("enabled");
+    $("#btn-storagepools-filesystems-unlock").addClass("enabled");
+    $("#btn-storagepools-create").prop("title", message + " create a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("enabled");
+    $("#btn-storagepools-import").prop("title", message + " import a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("enabled");
+    $("[id^=btn-storagepool-filesystems-create-]").prop("title", message + " create a file system").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("enabled");
+    $("[id^=btn-storagepool-snapshots-create-]").prop("title", message + " create a snapshot").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("enabled");
+    $("[id^=btn-storagepool-snapshot-dropdown-]").prop("title", message + " manage this snapshot").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("enabled");
+    $("[id^=btn-storagepool-status-dropdown-]").prop("title", message + " manage this storage pool").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("enabled");
+
+    //Disable privileged items
+    $(".privileged").addClass("enabled");
+
+    //Disable privileged modal items
+    $(".privileged-modal").prop("enabled", true);
+    $(".privileged-modal button").prop("enabled", true);
+    $(".privileged-modal input").prop("enabled", true);
+
+    //Disable sliders
+    $("#validationwrapper-storagepools-create-refreservation .slider-pf .slider *").addClass("enabled");
+    $("#slider-storagepools-create-refreservation").slider("enable");
+    $("[id^=validationwrapper-storagepool-filesystems-create-quota-] .slider-pf .slider *").addClass("enabled");
+    $("[id^=slider-storagepool-filesystems-create-quota-]").slider("enable");
+    $("[id^=validationwrapper-storagepool-filesystem-configure-quota-] .slider-pf .slider *").addClass("enabled");
+    $("[id^=slider-storagepool-filesystem-configure-quota-]").slider("enable");
+    $("[id^=validationwrapper-storagepool-filesystem-configure-refreservation-] .slider-pf .slider *").addClass("enabled");
+    $("[id^=slider-storagepool-filesystem-configure-refreservation-]").slider("enable");
+
+    //Remove primary color from unlock file system menu item
+    $("[id^=btn-storagepool-filesystem-unlock-] > strong").addClass("text-ct-locked");
+    $("[id^=btn-storagepool-filesystem-unlock-icon-]").addClass("pficon-ct-locked");
+}
+
 function FnCockpitSmbDisable() {
     let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
-    FnConsole.log[2]("FnCockpitSmbDisable: " + zfsmanager.user.name );
+    FnConsole.log[2]( "IN" + "FnCockpitSmbDisable: " + zfsmanager.user.name );
     
     // Disable buttons
     $("#btn-configure").prop("title", message + " configure ZFS Manager").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
@@ -922,15 +964,31 @@ function FnCockpitSmbDisable() {
     $("#btn-storagepools-create").prop("title", message + " create a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
     $("#btn-storagepools-import").prop("title", message + " import a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
     $("[id^=btn-storagepool-configure-]").prop("title", message + " configuring storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("[id^=btn-storagepool-filesystem-configure-]").prop("title", message + " configuring file systems").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
+    //$("[id^=btn-storagepool-filesystem-configure-]").prop("title", message + " configuring file systems").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
     $("[id^=btn-storagepool-status-dropdown-]").prop("title", message + " manage this storage pool").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("disabled");
+    
+    //Disable privileged items
+    $(".privileged").addClass("disabled");
+
+    //Disable privileged modal items
+    $(".privileged-modal").prop("disabled", true);
+    $(".privileged-modal button").prop("disabled", true);
+    $(".privileged-modal input").prop("disabled", true);
+
+    //Enable Access to Some Priveleged Modals
+    //$("#modal-storagepool-filesystem-configure-").prop("disabled", false);
 
     //Enable Access to Some of Privileged buttons 
+    $("[id^=btn-storagepool-snapshot-]").removeClass("disabled");
+    $("[id^=btn-storagepool-snapshots-create-]").removeClass("disabled");
     $("[id^=btn-storagepool-filesystem-samba-]").removeClass("disabled");
     $("[id^=btn-storagepool-filesystem-snapshot-create-]").removeClass("disabled");
     $("[id^=btn-storagepool-filesystem-rename-]").removeClass("disabled");
     $("[id^=btn-storagepool-filesystem-destroy-]").removeClass("disabled");
-    $("[id^=btn-storagepool-snapshot-]").removeClass("disabled");
+    $("[id^=btn-storagepool-filesystem-unmount-]").removeClass("disabled");
+    $("[id^=btn-storagepool-filesystem-changepassphrase-]").removeClass("disabled");
+    $("[id^=btn-storagepool-filesystems-create-]").removeClass("disabled");
+    $("[id^=btn-storagepool-filesystem-configure-]").removeClass("disabled");
 
     //Disable sliders
     $("#validationwrapper-storagepools-create-refreservation .slider-pf .slider *").addClass("disabled");
@@ -949,9 +1007,10 @@ function FnCockpitSmbDisable() {
 
 function FnCockpitElementsUpdate() {
     if (!zfsmanager.user.admin && !zfsmanager.user.zfs && !zfsmanager.user.smb ) {
+        FnConsole.log[2]("ElemUpdate -> FnCockpitElementsDisable: " + zfsmanager.user.name );
         FnCockpitElementsDisable();
     } else if (zfsmanager.user.smb && !zfsmanager.user.admin && !zfsmanager.user.zfs ) {
-        FnConsole.log[2]("FnCockpitElementsUpdate: " + zfsmanager.user.name );
+        FnConsole.log[2]("ElemUpdate -> FnCockpitSmbDisable: " + zfsmanager.user.name );
         FnCockpitSmbDisable();
     }
 }
@@ -1018,8 +1077,8 @@ function FnCockpitPackageSosReportDelete() {
 }
 
 function FnCockpitPermissionsGet() {
+    //FnCockpitElementsDisable();
     FnConsole.log[2]("Cockpit, Permissions, Get: In Progress");
-
     zfsmanager.cockpit.permission = cockpit.permission({ admin: true });
     zfsmanager.cockpit.zfspermission = cockpit.permission({ group: "zfsadmin" });
     zfsmanager.cockpit.smbpermission = cockpit.permission({ group: "smbadmin" });
@@ -1028,7 +1087,7 @@ function FnCockpitPermissionsGet() {
         zfsmanager.user.admin = zfsmanager.cockpit.permission.allowed;
         zfsmanager.user.zfs = zfsmanager.cockpit.zfspermission.allowed;
         zfsmanager.user.smb = zfsmanager.cockpit.smbpermission.allowed;
-        FnConsole.log[2]("Cockpit, Permissions, Get: admin: " + zfsmanager.cockpit.permission.allowed )
+        FnConsole.log[2]("AFTER Cockpit, Permissions, Get: admin: " + zfsmanager.cockpit.permission.allowed )
         FnConsole.log[2]("Cockpit, Permissions, Get: zfs: " + zfsmanager.cockpit.zfspermission.allowed )
         FnConsole.log[2]("Cockpit, Permissions, Get: smb: " + zfsmanager.cockpit.smbpermission.allowed )
 
@@ -1040,14 +1099,17 @@ function FnCockpitPermissionsGet() {
             
             zfsmanager.user.admin = true;
             FnFirstStepsPrivileged();
+            //FnCockpitElementsEnable()
         } else if (zfsmanager.user.smb) {
             FnConsole.log[2]("Cockpit, Permissions, Get: Success");
             FnConsole.log[2]("Cockpit, Permissions, Get: Success, for smb user: " + zfsmanager.user.name );
-            FnConsole.log[2]("FnCockpitElementsUpdate: " + zfsmanager.user.name );
+            FnConsole.log[2]("PERM GET -> FnCockpitSmbDisable: " + zfsmanager.user.name );
+            
+            //zfsmanager.user.admin = true
             FnCockpitSmbDisable();
         } else {
             FnConsole.warn("Cockpit, Permissions, Get: Warning, Message: " + zfsmanager.user.name + " does not have admin permissions");
-            
+            FnConsole.log[2]("Get Perm -> FnCockpitElementsDisable: " + zfsmanager.user.name );
             FnCockpitElementsDisable();
         }
     });
@@ -1400,9 +1462,6 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 				</tr>
 				<tr class="listing-ct-panel">
 					<td colspan="11">
-						<div id="spinner-storagepool-` + pool.id + `" class="listing-ct-body listing-ct-body-spinner col-md-12">
-							<div class="spinner spinner-lg"></div>
-						</div>
                         <div id="listingcthead-storagepool-` + pool.id + `" class="listing-ct-head hidden">
 							<div class="listing-ct-actions"></div>
 							<ul class="nav nav-tabs nav-tabs-pf">
@@ -1459,7 +1518,7 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 											    <button id="btn-storagepool-snapshots-refresh-` + pool.id + `" class="btn btn-default" tabIndex="-1">Refresh</button>
 										    </div>
 										</div>
-										<table id="table-storagepool-snapshots-` + pool.id + `" class="table table-striped table-ct-snapshots">
+										<table id="table-storagepool-snapshots-` + pool.id + `-header" class="table table-striped table-ct-snapshots">
 										    <thead>
 											    <tr>
 											        <th colspan="2">Name</th>
@@ -1471,8 +1530,9 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 											        <th class="listing-ct-actionsmenu"></th>
 											    </tr>
 										    </thead>
-										    <tbody id="tbody-storagepool-snapshots-` + pool.id + `"></tbody>
+										    ` + (!zfsmanager.configuration.zfs.snapshot.filesystemlist ? `<tbody id="tbody-storagepool-snapshots-` + pool.id + `"></tbody>` : ``) + `
 										</table>
+                                        ` + (zfsmanager.configuration.zfs.snapshot.filesystemlist ? `<div id="div-storagepool-snapshots-` + pool.id + `"></div>` : ``) + `
 									</div>
 								</div>
 								<div id="tabpanel-storagepool-status-` + pool.id + `" class="tab-pane" role="tabpanel">
@@ -1520,6 +1580,9 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 									</div>
 								</div>
 							</div>
+                        </div>
+						<div id="spinner-storagepool-` + pool.id + `" class="listing-ct-body listing-ct-body-spinner col-md-12">
+							<div class="spinner spinner-lg"></div>
 						</div>
 					</td>
 				</tr>
@@ -1618,11 +1681,11 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 
 function FnStoragePoolsImportableBlockDeviceGet(pools = { destroyed: false }) {
     let process = {
-        command: [ "/bin/sh", ((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec /sbin/zpool import" : ""), "-d", "/dev", (pools.destroyed ? " -D" : ""), "2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','"  ]
+        command: ["/bin/sh", "-c", "/sbin/zpool import -d /dev" + (pools.destroyed ? " -D" : "") + " 2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','"]
     };
 
     FnConsole.log[2]("Storage Pools, Importable, Block Device, Get: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -1635,11 +1698,11 @@ function FnStoragePoolsImportableBlockDeviceGet(pools = { destroyed: false }) {
 
 function FnStoragePoolsImportableDiskGet(pools = { destroyed: false }) {
     let process = {
-        command: [ "/bin/sh", ((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec /sbin/zpool import" : ""), "-d", "/dev/disk/by-id", (pools.destroyed ? " -D" : ""), "2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','" ]
+        command: ["/bin/sh", "-c", "/sbin/zpool import -d /dev/disk/by-id" + (pools.destroyed ? " -D" : "") + " 2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','"]
     };
 
     FnConsole.log[2]("Storage Pools, Importable, Disk / WWN, Get: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out"})
         .done(function () {
@@ -1828,11 +1891,11 @@ function FnStoragePoolsImportableGetFail(pools = { destroyed: false }) {
 
 function FnStoragePoolsImportableHardwarePathGet(pools = { destroyed: false }) {
     let process = {
-        command: ["/bin/sh", ((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec /sbin/zpool import" : ""), "-d", "/dev/disk/by-path", (pools.destroyed ? " -D" : ""), " 2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','" ]
+        command: ["/bin/sh", "-c", "/sbin/zpool import", "-d", "/dev/disk/by-path", (pools.destroyed ? " -D" : ""), " 2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','" ]
     };
 
     FnConsole.log[2]("Storage Pools, Importable, Hardware Path, Get: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -1845,11 +1908,11 @@ function FnStoragePoolsImportableHardwarePathGet(pools = { destroyed: false }) {
 
 function FnStoragePoolsImportableVirtualDeviceMappingGet(pools = { destroyed: false }) {
     let process = {
-        command: ["/bin/sh", ((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec /sbin/zpool import" : ""), "-d", "/dev/disk/by-vdev", (pools.destroyed ? " -D" : ""), "2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','"]
+        command: ["/bin/sh", "-c", "/sbin/zpool import", "-d", "/dev/disk/by-vdev", (pools.destroyed ? " -D" : ""), "2> /dev/null | /bin/grep -E 'pool:\| id:\|state:'  | tr '\\\n' ','"]
     };
 
     FnConsole.log[2]("Storage Pools, Importable, Virtual Device Mapping, Get: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -2642,7 +2705,7 @@ function FnStoragePoolConfigurationGet(pool = { name, id, boot: false, root: fal
                         }
                         break;
                     case "readonly": //Default is off
-                        if (pool.properties.value == "on" || pool.boot && zfsmanager.configuration.zfs.storagepool.bootlockdown || !zfsmanager.user.admin) {
+                        if (pool.properties.value == "on" || pool.boot && zfsmanager.configuration.zfs.storagepool.bootlockdown || !zfsmanager.user.admin ) {
                             pool.readonly = true;
                         }
 
@@ -2936,7 +2999,7 @@ function FnStoragePoolConfigureFeaturesFail(pool = { name, id }) {
 
 function FnStoragePoolCreate(pool = { name, ashift, autoexpand, autoreplace, autotrim, force, virtualdevice }, filesystem = { compression, dedup, recordsize, refreservationpercent, selinux }, disks = { id: [] }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "create", "-o", "ashift=" + pool.ashift, "-o", "autoexpand=" + pool.autoexpand, "-o", "autoreplace=" + pool.autoreplace, "-o", "autotrim=" + pool.autotrim, "-O", "aclinherit=passthrough", "-O", "acltype=posixacl", "-O", "casesensitivity=sensitive", "-O", "compression=" + filesystem.compression, "-O", "normalization=formD", "-O", "recordsize=" + filesystem.recordsize, "-O", "sharenfs=off", "-O", "sharesmb=off", "-O", "utf8only=on", "-O", "xattr=sa", pool.name]
+        command: ["pkexec", "/sbin/zpool", "create", "-o", "ashift=" + pool.ashift, "-o", "autoexpand=" + pool.autoexpand, "-o", "autoreplace=" + pool.autoreplace, "-o", "autotrim=" + pool.autotrim, "-O", "aclinherit=passthrough", "-O", "acltype=posixacl", "-O", "casesensitivity=sensitive", "-O", "compression=" + filesystem.compression, "-O", "normalization=formD", "-O", "recordsize=" + filesystem.recordsize, "-O", "sharenfs=off", "-O", "sharesmb=off", "-O", "utf8only=on", "-O", "xattr=sa", pool.name]
     };
     let modal = {
         hide: true
@@ -2968,7 +3031,7 @@ function FnStoragePoolCreate(pool = { name, ashift, autoexpand, autoreplace, aut
     pool.id = FnGenerateId({ at: false, colon: true, forwardslash: false, period: true, underscore: true, whitespace: true }, { name: pool.name, attribute: true });
 
     FnConsole.log[1]("Storage Pools, Create: In Progress, Pool: " + pool.name);
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     $("#spinner-storagepools-create span").text("Creating storage pool...");
 
@@ -3299,7 +3362,7 @@ function FnStoragePoolDestroy(pool = { name, id, altroot: false, force: false, l
 
 function FnStoragePoolDestroyCommand(pool = { name, id, force: false }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "destroy", pool.name]
+        command: ["pkexec", "/sbin/zpool", "destroy", pool.name]
     };
 
     if (pool.force) {
@@ -3307,7 +3370,7 @@ function FnStoragePoolDestroyCommand(pool = { name, id, force: false }) {
     }
 
     FnConsole.log[1]("Storage Pools, Destroy: In Progress, Pool: " + pool.name);
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -3626,7 +3689,7 @@ function FnStoragePoolDiskDetach(pool = { name, id }, disk = { id, labelclear: f
 
 function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive: false }, display = { silent: false }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "labelclear", disk.id]
+        command: ["pkexec", "/sbin/zpool", "labelclear", disk.id]
     };
 
     if (disk.inactive) {
@@ -3634,7 +3697,7 @@ function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive:
     }
 
     FnConsole.log[2]("Storage Pools, Disk Label, Clear: In Progress, Disk: " + disk.id);
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -3659,7 +3722,7 @@ function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive:
 
 function FnStoragePoolDiskOffline(pool = { name, id }, disk = { id, force: false, temporary: false }, modal = { name, id }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "offline", pool.name, disk.id]
+        command: ["pkexec", "/sbin/zpool", "offline", pool.name, disk.id]
     };
 
     if (disk.force) {
@@ -3742,7 +3805,7 @@ function FnStoragePoolDiskOnline(pool = { name, id, scrub: false }, disk = { id,
 
 function FnStoragePoolDiskReplace(pool = { name, id, force: false }, disk = { id, idnew }, modal = { name, id }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "replace", pool.name, disk.id, disk.idnew]
+        command: ["pkexec", "/sbin/zpool", "replace", pool.name, disk.id, disk.idnew]
     };
 
     if (pool.force) {
@@ -3866,7 +3929,7 @@ function FnStoragePoolExport(pool = { name, id, altroot: false, force: false, re
 
 function FnStoragePoolExportCommand(pool = { name, id, force: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "export", pool.name]
+        command: ["pkexec", "/sbin/zpool", "export", pool.name]
     };
 
     if (pool.force) {
@@ -3960,7 +4023,7 @@ function FnStoragePoolHealthIcon(pool = { health }) {
 
 function FnStoragePoolImport(pool = { name, altroot, destroyed: false, force: false, guid, ignoremissinglog: false, namenew, readonly: false, recoverymode: false }, filesystem = { mount: true, selinux: true }, disks = { id: { blockdevice: true, disk: false, path: false, vdev: false }, identifier }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "import", pool.guid]
+        command: [ "/sbin/zpool", "import", pool.guid]
     };
     let modal = {
         hide: true
@@ -4192,7 +4255,7 @@ function FnStoragePoolImport(pool = { name, altroot, destroyed: false, force: fa
 
 function FnStoragePoolRefreservationSet(pool = { name, id }, filesystem = { refreservation }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "set", "refreservation=" + filesystem.refreservation, pool.name]
+        command: ["pkexec", "/sbin/zfs", "set", "refreservation=" + filesystem.refreservation, pool.name]
     };
 
     FnConsole.log[2]("Storage Pools, Refreservation, Set: In Progress");
@@ -4751,7 +4814,7 @@ function FnStoragePoolUpgradeFail(pool = { name, id }, process = { data, message
 
 function FnStoragePoolVirtualDeviceAdd(pool = { name, id, force: false, virtualdevice }, disks = { id: [] }, modal = { name, id }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "add", pool.name]
+        command: ["pkexec", "/sbin/zpool", "add", pool.name]
     };
 
     modal.hide = true;
@@ -5075,11 +5138,11 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     break;
                 case 6: //6=recordsize
                     filesystem.recordsize = __value;
-                    if(zfsmanager.user.smb && !zfsmanager.user.admin && !zfsmanager.user.zfs){
-                        filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + "N/A" + `</td>`;
-                    } else {
-                        filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + FnFormatBytes({ base2: true, decimals: 0, value: __value }) + `</td>`;
-                    }
+                    // if(zfsmanager.user.smb && !zfsmanager.user.admin && !zfsmanager.user.zfs){
+                    //    filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + "N/A" + `</td>`;
+                    // } else {
+                    filesystem.output += `<td><span class="table-ct-head">Record Size:</span>` + FnFormatBytes({ base2: true, decimals: 0, value: __value }) + `</td>`;
+                    //}
                     break;
                 case 7: //7=compression
                     filesystem.compression = __value;
@@ -5410,7 +5473,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
     $("#tr-storagepool-" + pool.id).attr("data-pool-refresh-filesystems", "true");
 
     $("#spinner-storagepool-filesystems-" + pool.id).addClass("hidden");
-    $("#paneltitle-storagepool-filesystems-" + pool.id).removeClass("hidden").text(FnDateTime());
+    $("#paneltitle-storagepool-filesystems-" + pool.id).removeClass("hidden").html(FnDateTime() + (zfsmanager.configuration.zfs.storagepool.count ? ` <span class="pf-c-badge pf-m-read">` + filesystems.length + `</span>` : ``));
     $("#btn-storagepool-filesystems-create-" + pool.id).prop("disabled", false);
     $("#btn-storagepool-filesystems-refresh-" + pool.id).prop("disabled", false);
 
@@ -5973,7 +6036,7 @@ function FnFileSystemConfigurationGet(pool = { name, id, readonly: false }, file
         command: ["/sbin/zfs", "get", "readonly,aclinherit,acltype,atime,available,canmount,casesensitivity,checksum,compression,context,dedup,dnodesize,defcontext,encryption,encryptionroot,fscontext,guid,mountpoint,quota,recordsize,refreservation,rootcontext,sharenfs,sharesmb,special_small_blocks,used,xattr", "-H", "-o", "property,value,source", "-p", filesystem.name]
     };
 
-    if (!zfsmanager.user.admin) {
+    if (!zfsmanager.user.admin && !zfsmanager.user.smb) {
         pool.readonly = true;
     }
 
@@ -7739,7 +7802,7 @@ function FnFileSystemConfigureInheritance(pool = { name, id }, filesystem = { na
                 process.command = ["pkexec", "/sbin/zfs", "inherit", _value, filesystem.name];
 
                 FnConsole.log[2]("File Systems, Configure, Inheritance: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
-                FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+                FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
                 cockpit.spawn(process.command, { err: "out" })
                     .done(function () {
@@ -7840,7 +7903,7 @@ function FnFileSystemCreate(pool = { name, id, altroot: false }, filesystem = { 
     }
 
     FnConsole.log[1]("File Systems, Create: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     $("#spinner-storagepool-filesystems-create-" + pool.id + " span").text("Creating file system...");
 
@@ -8058,7 +8121,7 @@ function FnFileSystemDestroy(pool = { name, id, altroot: false, readonly: false 
 
 function FnFileSystemDestroyCommand(pool = { name, id }, filesystem = { name, id, force: false, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "destroy", filesystem.name]
+        command: ["pkexec", "/sbin/zfs", "destroy", filesystem.name]
     };
 
     if (filesystem.force) {
@@ -8144,7 +8207,7 @@ function FnFileSystemLock(pool = { name, id }, filesystem = { name, id, type }, 
 
 function FnFileSystemMount(pool = { name, id, altroot: false, readonly: false }, filesystem = { name, id, overlay: true, type }, samba = { enable: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "mount", filesystem.name]
+        command: ["pkexec", "/sbin/zfs", "mount", filesystem.name]
     };
 
     if (filesystem.overlay) {
@@ -8396,7 +8459,7 @@ function FnFileSystemRename(pool = { name, id, altroot: false }, filesystem = { 
 
 function FnFileSystemRenameCommand(pool = { name, id }, filesystem = { name, id, createnonexistparents: false, force: false, namenew, parent }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "rename", filesystem.name, filesystem.namenew]
+        command: ["pkexec", "/sbin/zfs", "rename", filesystem.name, filesystem.namenew]
     };
 
     if (filesystem.force) {
@@ -8641,7 +8704,7 @@ function FnFileSystemUnlock(pool = { name, id, altroot: false, readonly: false }
         filesystem.passphrase = filesystem.passphrase.replace(/\'/g, "\'\"\'\"\'");
     }
 
-    process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | /sbin/zfs load-key \"" + filesystem.name + "\""];
+    process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | pkexec /sbin/zfs load-key \"" + filesystem.name + "\""];
 
     FnConsole.log[2]("File Systems, Unlock: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
@@ -8650,7 +8713,7 @@ function FnFileSystemUnlock(pool = { name, id, altroot: false, readonly: false }
         $("#spinner-" + modal.name + modal.id + " span").text("Unlocking " + filesystem.type.toLowerCase() + "...");
     }
 
-    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
+    return cockpit.spawn(process.command, { err: "out" })
         .done(function (data, message) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "File Systems, Unlock:" }));
 
@@ -8864,7 +8927,7 @@ function FnFileSystemUnmount(pool = { name, id, altroot: false, readonly: false 
 
 function FnFileSystemUnmountCommand(pool = { name, id }, filesystem = { name, id, force: false, lock: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "unmount", filesystem.name]
+        command: ["pkexec", "/sbin/zfs", "unmount", filesystem.name]
     };
 
     if (filesystem.force) {
@@ -8936,8 +8999,11 @@ function FnSnapshotsGet(pool = { name, id }) {
         })
         .finally(function () {
             if (snapshots.empty) {
+                if (zfsmanager.configuration.zfs.snapshot.filesystemlist) {
+                    $("#div-storagepool-snapshots-" + pool.id).empty();
+                }
                 $("#tbody-storagepool-snapshots-" + pool.id).empty();
-                $("#tbody-storagepool-snapshots-" + pool.id).append(`<tr><td colspan="12">No snapshots found.</th></tr>`);
+                $("#" + (zfsmanager.configuration.zfs.snapshot.filesystemlist ? "div" : "tbody") + "-storagepool-snapshots-" + pool.id).append((zfsmanager.configuration.zfs.snapshot.filesystemlist ? `<table class="table table-striped table-ct-snapshots"><tbody>` : ``) + `<tr><td colspan="12">No snapshots found.</th></tr>` + (zfsmanager.configuration.zfs.snapshot.filesystemlist ? `</tbody></table>` : ``));
                 $("#modals-storagepool-snapshots-" + pool.id).remove();
                 $("#modals-storagepool-snapshot-" + pool.id).remove();
                 $("#modals").append(`<div id="modals-storagepool-snapshots-` + pool.id + `"></div>`);
@@ -8961,15 +9027,24 @@ function FnSnapshotsGet(pool = { name, id }) {
 }
 
 function FnSnapshotsGetCommand(pool = { name, id, altroot: false, readonly: false }, process = { data, message }) {
-    let snapshots = process.data.split(/\n/g).filter(v => v);
+    let snapshots = {
+        data: process.data.split(/\n/g).filter(v => v),
+        filesystemlist: {
+            count: 0,
+            name: ""
+        }
+    };
 
+    if (zfsmanager.configuration.zfs.snapshot.filesystemlist) {
+        $("#div-storagepool-snapshots-" + pool.id).empty();
+    }
     $("#tbody-storagepool-snapshots-" + pool.id).empty();
     $("#modals-storagepool-snapshots-" + pool.id).remove();
     $("#modals-storagepool-snapshot-" + pool.id).remove();
     $("#modals").append(`<div id="modals-storagepool-snapshots-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-storagepool-snapshot-` + pool.id + `"></div>`);
 
-    snapshots.forEach((_value, _index) => {
+    snapshots.data.forEach((_value, _index) => {
         let snapshot = {
             properties: _value.split(/\t/g).filter(v => v),
             clones: [],
@@ -8987,9 +9062,51 @@ function FnSnapshotsGetCommand(pool = { name, id, altroot: false, readonly: fals
         if (!snapshot.properties[7]) { //Append clones property if not included after split
             snapshot.properties[7] = "";
         }
+        snapshot.filesystem = {
+            id: FnGenerateId({ at: true, colon: true, forwardslash: true, period: true, underscore: true, whitespace: true }, { name: snapshot.properties[0].replace(/^(.*)\@.*$/, "$1"), attribute: true })
+        };
 
-        snapshot.output = `<tr>`;
+        snapshot.output = "";
 
+        if (zfsmanager.configuration.zfs.snapshot.filesystemlist) {
+            if (_index == 0 || (snapshots.filesystemlist.name != "" && snapshots.filesystemlist.name != snapshot.properties[0].replace(/^(.*)\@.*$/, "$1"))) {
+                snapshot.output += `<table id="table-storagepool-snapshots-listing-` + snapshot.filesystem.id + `" class="listing listing-ct listing-ct-wide">
+                                        \x3Cscript nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+				                            $("#table-storagepool-snapshots-listing-` + snapshot.filesystem.id + ` > tbody > tr.listing-ct-item").on("click", function () {
+                                                if (!$(this).parent().hasClass("open")) {
+                                                    $(this).parent().addClass("open");
+                                                } else {
+                                                    $(this).parent().removeClass("open");
+                                                }
+				                            });
+			                            \x3C/script>
+                                        <tbody>
+				                            <tr id="tr-storagepool-snapshots-listing-` + snapshot.filesystem.id + `" class="listing-ct-item listing-ct-nonavigate listing-ct-item-snapshots">
+                                                <td class="listing-ct-toggle listing-ct-toggle-snapshots"><i class="fa fa-fw"></i></td>
+                                                <td colspan="10"><span class="table-ct-head">Name:</span>` + snapshot.properties[0].replace(/^(.*)\@.*$/, "$1") + (zfsmanager.configuration.zfs.storagepool.count ? ` <span id="span-storagepool-snapshots-listing-` + snapshot.filesystem.id + `-count" class="pf-c-badge pf-m-read"></span>` : ``) + `</td>
+                                            </tr>
+                                            <tr class="listing-ct-panel">
+                                                <td colspan="11">
+                                                    <table class="table table-striped table-ct-snapshots">
+										                <tbody id="tbody-storagepool-snapshots-list-` + snapshot.filesystem.id + `"></tbody>
+										            </table>
+					                            </td>
+				                            </tr>
+			                            </tbody>
+                                    </table>
+                `;
+
+                $("#div-storagepool-snapshots-" + pool.id).append(snapshot.output);
+
+                snapshot.output = "";
+                snapshots.filesystemlist.count = 0;
+            }
+
+            snapshots.filesystemlist.count++;
+            $("#span-storagepool-snapshots-listing-" + snapshot.filesystem.id + "-count").html(snapshots.filesystemlist.count);
+        }        
+
+        snapshot.output += `<tr>`;
         snapshot.properties.forEach((__value, __index) => {
             //0=name, 1=creation, 2=used, 3=refer, 4=encryption, 5=encryptionroot, 6=keystatus, 7=clones
 
@@ -9003,13 +9120,13 @@ function FnSnapshotsGetCommand(pool = { name, id, altroot: false, readonly: fals
                 case 1: //1=creation
                     snapshot.creation = __value;
 
-                    snapshot.output += `<td><span class="table-ct-head">Creation:</span>` + FnDateTimeEpoch({ date: __value }) + `</td>`;
+                    snapshot.output += `<td><span class="table-ct-head">Created:</span>` + FnDateTimeEpoch({ date: __value }) + `</td>`;
                     break;
                 case 2: //2=used
                     snapshot.output += `<td><span class="table-ct-head">Used:</span>` + FnFormatBytes({ base2: true, decimals: 2, value: __value }) + `</td>`;
                     break;
                 case 3: //3=refer
-                    snapshot.output += `<td><span class="table-ct-head">Name:</span>` + FnFormatBytes({ base2: true, decimals: 2, value: __value }) + `</td>`;
+                    snapshot.output += `<td><span class="table-ct-head">Referenced:</span>` + FnFormatBytes({ base2: true, decimals: 2, value: __value }) + `</td>`;
                     break;
                 case 4: //4=encryption
                     if (__value.toLowerCase() != "off") {
@@ -9117,7 +9234,13 @@ function FnSnapshotsGetCommand(pool = { name, id, altroot: false, readonly: fals
 
         snapshot.output += `</tr>`;
 
-        $("#tbody-storagepool-snapshots-" + pool.id).append(snapshot.output);
+        if (zfsmanager.configuration.zfs.snapshot.filesystemlist) {
+            $("#tbody-storagepool-snapshots-list-" + snapshot.filesystem.id).append(snapshot.output);
+
+            snapshots.filesystemlist.name = snapshot.properties[0].replace(/^(.*)\@.*$/, "$1");
+        } else {
+            $("#tbody-storagepool-snapshots-" + pool.id).append(snapshot.output);
+        }
 
         //Register snapshot modals
         if (snapshot.actionsmenu.register.clone) {
@@ -9142,7 +9265,7 @@ function FnSnapshotsGetCommand(pool = { name, id, altroot: false, readonly: fals
     $("#tr-storagepool-" + pool.id).attr("data-pool-refresh-snapshots", "true");
 
     $("#spinner-storagepool-snapshots-" + pool.id).addClass("hidden");
-    $("#paneltitle-storagepool-snapshots-" + pool.id).removeClass("hidden").text(FnDateTime());
+    $("#paneltitle-storagepool-snapshots-" + pool.id).removeClass("hidden").html(FnDateTime() + (zfsmanager.configuration.zfs.storagepool.count ? ` <span class="pf-c-badge pf-m-read">` + snapshots.data.length + `</span>` : ``));
     $("#btn-storagepool-snapshots-create-" + pool.id).prop("disabled", false);
     $("#btn-storagepool-snapshots-refresh-" + pool.id).prop("disabled", false);
 
@@ -9261,7 +9384,7 @@ function FnSnapshotChildSnapshotsGet(pool = { name, id }, snapshot = { name, id,
 
 function FnSnapshotClone(pool = { name, id, altroot: false }, snapshot = { name, id, clone: { name, createnonexistparents: false, parent } }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
+        command: ["pkexec", "/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
     };
 
     if (snapshot.clone.createnonexistparents) {
@@ -9358,7 +9481,7 @@ function FnSnapshotCloneFail(pool = { name, id }, snapshot = { name, id }, proce
 
 function FnSnapshotCreate(pool = { name, id }, snapshot = { name, id, recursive: false }, modal = { name, id }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "snapshot", snapshot.name]
+        command: ["pkexec", "/sbin/zfs", "snapshot", snapshot.name]
     };
 
     modal.hide = true;
@@ -9542,7 +9665,7 @@ function FnSnapshotDestroy(pool = { name, id, altroot: false, readonly: false },
 
 function FnSnapshotDestroyCommand(pool = { name, id }, snapshot = { name, id, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "destroy", snapshot.name]
+        command: ["pkexec", "/sbin/zfs", "destroy", snapshot.name]
     };
 
     if (snapshot.recursive) {
@@ -9593,7 +9716,7 @@ function FnSnapshotDestroyFail(pool = { name, id }, snapshot = { name, id }, pro
 
 function FnSnapshotRename(pool = { name, id }, snapshot = { name, id, namenew, recursive: false }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "rename", snapshot.name, snapshot.namenew]
+        command: ["pkexec", "/sbin/zfs", "rename", snapshot.name, snapshot.namenew]
     };
     let modal = {
         hide: true
@@ -9813,7 +9936,7 @@ function FnSnapshotRollBack(pool = { name, id, altroot: false, readonly: false }
 
 function FnSnapshotRollBackCommand(pool = { name, id }, snapshot = { name, id, force: false, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zfs", "rollback", snapshot.name]
+        command: ["pkexec", "/sbin/zfs", "rollback", snapshot.name]
     };
 
     if (snapshot.force) {
@@ -11390,11 +11513,11 @@ function FnDisksStoragePoolsAttachedGet(pool = { name, id }, disks = { id: { blo
 
 function FnDisksStoragePoolsImportableAttachedGet() {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/sbin/zpool", "import", "-d", "/dev"]
+        command: ["pkexec", "/sbin/zpool", "import", "-d", "/dev"]
     };
 
     FnConsole.log[2]("Disks, Storage Pools, Importable, Attached, Get: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -11430,7 +11553,7 @@ function FnDisksStoragePoolsImportableGet() {
 
 function FnSambaConfigurationReload() {
     let process = {
-        command: [((zfsmanager.user.admin || !zfsmanager.user.name) ? "pkexec" : ""), "/usr/bin/smbcontrol", "all", "reload-config"]
+        command: ["pkexec", "/usr/bin/smbcontrol", "all", "reload-config"]
     };
 
     FnConsole.log[2]("Samba, Configuration, Reload: In Progress");
@@ -12967,7 +13090,7 @@ function FnSambaZfsShareEnable(pool = { name, id }, filesystem = { name, id, mou
     };
 
     FnConsole.log[2]("Samba, Share, Enable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -12984,7 +13107,7 @@ function FnSambaZfsSharesConfigurationReload() {
     };
 
     FnConsole.log[2]("Samba, ZFS Shares Configuration, Reload: In Progress");
-    FnConsole.log[2](FnConsoleCommand({ command: process.command }));
+    FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
         .done(function () {
@@ -13227,13 +13350,13 @@ function FnModalAbout() {
                         ` + FnDisplayInlineAlert({ status: "info", title: "A new version of Cockpit ZFS Manager is now available", description: `<span id="span-about-update-version"></span>` }, { name: "about-update", id: null, hidden: true }) + `
                         <div><span>Version:</span> <span>` + zfsmanager.version + `</span></div>
                         <div>Copyright &copy; 2019-2020 OPTIMANS Pty Ltd.</div>
-                        <div>Website: <a href="https://github.com/optimans/cockpit-zfs-manager" target="_blank">github.com/optimans/cockpit-zfs-manager</a></div>
+                        <div>Website: <a href="https://github.com/45drives/cockpit-zfs-manager" target="_blank">github.com/45drives/cockpit-zfs-manager</a></div>
                         <div><span>Licensed under:</span> <a href="https://opensource.org/licenses/lgpl-3.0.html" target="_blank">GNU LGPL version 3</a></div>
                     </div>
                     <div class="modal-footer">
                         <div></div>
                         <div class="modal-ct-buttons">
-                            <button class="btn btn-primary apply" data-dismiss="modal" tabindex="-1">Close</button>
+                            <button class="btn btn-default apply" data-dismiss="modal" tabindex="-1">Close</button>
                         </div>
                     </div>
                 </div>
@@ -13325,29 +13448,36 @@ function FnModalConfigureContent(modal = { id }) {
                         <div role="group">
                             <label id="switch-configure-zfs-filesystem-quotarestrict" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.filesystem.quotarestrict ? `checked="checked"` : ``) + ` tabIndex="10" type="checkbox"><span class="switch-toggle"></span></label><span>Restrict quota maximum to size of storage pool</span>
                         </div>
+                        <label class="control-label">Snapshot</label>
+                        <div role="group">
+                            <label id="switch-configure-zfs-snapshot-filesystemlist" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.snapshot.filesystemlist ? `checked="checked"` : ``) + ` tabIndex="11" type="checkbox"><span class="switch-toggle"></span></label><span>Display snapshots in lists by file system</span>
+                        </div>
                         <label class="control-label">Status</label>
                         <div role="group">
-                            <label id="switch-configure-zfs-status-errorcolors" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.status.errorcolors ? `checked="checked"` : ``) + ` tabIndex="11" type="checkbox"><span class="switch-toggle"></span></label><span>Display warning and danger colors for error counts</span>
+                            <label id="switch-configure-zfs-status-errorcolors" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.status.errorcolors ? `checked="checked"` : ``) + ` tabIndex="12" type="checkbox"><span class="switch-toggle"></span></label><span>Display warning and danger colors for error counts</span>
                         </div>
                         <div role="group">
-                            <label id="switch-configure-zfs-status-trimunsupported" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.status.trimunsupported ? `checked="checked"` : ``) + ` tabIndex="12" type="checkbox"><span class="switch-toggle"></span></label><span>Display TRIM unsupported message</span>
+                            <label id="switch-configure-zfs-status-trimunsupported" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.status.trimunsupported ? `checked="checked"` : ``) + ` tabIndex="13" type="checkbox"><span class="switch-toggle"></span></label><span>Display TRIM unsupported message</span>
                         </div>
                         <label class="control-label">Storage Pool</label>
                         <div role="group">
-                            <label id="switch-configure-zfs-storagepool-boot" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.boot ? `checked="checked"` : ``) + ` tabIndex="13" type="checkbox"><span class="switch-toggle"></span></label><span>Display boot storage pool</span>
+                            <label id="switch-configure-zfs-storagepool-boot" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.boot ? `checked="checked"` : ``) + ` tabIndex="14" type="checkbox"><span class="switch-toggle"></span></label><span>Display boot storage pool</span>
                         </div>
                         <div class="` + (!zfsmanager.configuration.zfs.storagepool.boot ? `hidden` : ``) + `" role="group">
-                            <label id="switch-configure-zfs-storagepool-bootlockdown" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.bootlockdown ? `checked="checked"` : ``) + ` tabIndex="14" type="checkbox"><span class="switch-toggle"></span></label><span>Prevent changes to boot storage pool</span>
+                            <label id="switch-configure-zfs-storagepool-bootlockdown" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.bootlockdown ? `checked="checked"` : ``) + ` tabIndex="15" type="checkbox"><span class="switch-toggle"></span></label><span>Prevent changes to boot storage pool</span>
                         </div>
                         <div role="group">
-                            <label id="switch-configure-zfs-storagepool-root" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.root ? `checked="checked"` : ``) + ` tabIndex="15" type="checkbox"><span class="switch-toggle"></span></label><span>Display root storage pool</span>
+                            <label id="switch-configure-zfs-storagepool-root" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.root ? `checked="checked"` : ``) + ` tabIndex="16" type="checkbox"><span class="switch-toggle"></span></label><span>Display root storage pool</span>
                         </div>
                         <div role="group">
-                            <label id="switch-configure-zfs-storagepool-refreshall" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.refreshall ? `checked="checked"` : ``) + ` tabIndex="16" type="checkbox"><span class="switch-toggle"></span></label><span>Refresh all components</span>
+                            <label id="switch-configure-zfs-storagepool-refreshall" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.refreshall ? `checked="checked"` : ``) + ` tabIndex="17" type="checkbox"><span class="switch-toggle"></span></label><span>Refresh all components</span>
+                        </div>
+                        <div role="group">
+                            <label id="switch-configure-zfs-storagepool-count" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.zfs.storagepool.count ? `checked="checked"` : ``) + ` tabIndex="18" type="checkbox"><span class="switch-toggle"></span></label><span>Display file systems and snapshots count</span>
                         </div>
                         <label class="control-label">Updates</label>
                         <div role="group">
-                            <label id="switch-configure-updates-check" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.updates.check ? `checked="checked"` : ``) + ` tabIndex="17" type="checkbox"><span class="switch-toggle"></span></label><span>Check for updates on launch</span>
+                            <label id="switch-configure-updates-check" class="onoff-ct privileged-modal"><input ` + (zfsmanager.configuration.updates.check ? `checked="checked"` : ``) + ` tabIndex="19" type="checkbox"><span class="switch-toggle"></span></label><span>Check for updates on launch</span>
                         </div>
                     </form>
                 </div>
@@ -13411,6 +13541,9 @@ function FnModalConfigureContent(modal = { id }) {
                             readonlylockdown: $("#switch-configure-zfs-filesystem-readonlylockdown input").prop("checked"),
                             snapshotactions: $("#switch-configure-zfs-filesystem-snapshotactions input").prop("checked")
                         },
+                        snapshot: {
+                            filesystemlist: $("#switch-configure-zfs-snapshot-filesystemlist input").prop("checked")
+                        },
                         status: {
                             errorcolors: $("#switch-configure-zfs-status-errorcolors input").prop("checked"),
                             trimunsupported: $("#switch-configure-zfs-status-trimunsupported input").prop("checked")
@@ -13419,13 +13552,14 @@ function FnModalConfigureContent(modal = { id }) {
                             activetab: $("#btnspan-configure-zfs-storagepool-activetab").attr("data-field-value"),
                             boot: $("#switch-configure-zfs-storagepool-boot input").prop("checked"),
                             bootlockdown: $("#switch-configure-zfs-storagepool-bootlockdown input").prop("checked"),
+                            count: $("#switch-configure-zfs-storagepool-count input").prop("checked"),
                             refreshall: $("#switch-configure-zfs-storagepool-refreshall input").prop("checked"),
                             root: $("#switch-configure-zfs-storagepool-root input").prop("checked")
                         }
                     }
                 };
 
-                FnConfigure({ cockpit: { manage: user.cockpit.manage }, disks: { base2: user.disks.base2 }, loglevel: user.loglevel, samba: { manage: user.samba.manage, windowscompatibility: user.samba.windowscompatibility }, updates: { check: user.updates.check }, zfs: { filesystem: { cloneorigin: user.zfs.filesystem.cloneorigin, quotarestrict: user.zfs.filesystem.quotarestrict, readonlylockdown: user.zfs.filesystem.readonlylockdown, snapshotactions: user.zfs.filesystem.snapshotactions }, status: { errorcolors: user.zfs.status.errorcolors, trimunsupported: user.zfs.status.trimunsupported }, storagepool: { activetab: user.zfs.storagepool.activetab, boot: user.zfs.storagepool.boot, bootlockdown: user.zfs.storagepool.bootlockdown, refreshall: user.zfs.storagepool.refreshall, root: user.zfs.storagepool.root } } }, { name: "configure", welcome: false })
+                FnConfigure({ cockpit: { manage: user.cockpit.manage }, disks: { base2: user.disks.base2 }, loglevel: user.loglevel, samba: { manage: user.samba.manage, windowscompatibility: user.samba.windowscompatibility }, updates: { check: user.updates.check }, zfs: { filesystem: { cloneorigin: user.zfs.filesystem.cloneorigin, quotarestrict: user.zfs.filesystem.quotarestrict, readonlylockdown: user.zfs.filesystem.readonlylockdown, snapshotactions: user.zfs.filesystem.snapshotactions }, snapshot: { filesystemlist: user.zfs.snapshot.filesystemlist }, status: { errorcolors: user.zfs.status.errorcolors, trimunsupported: user.zfs.status.trimunsupported }, storagepool: { activetab: user.zfs.storagepool.activetab, boot: user.zfs.storagepool.boot, bootlockdown: user.zfs.storagepool.bootlockdown, count: user.zfs.storagepool.count, refreshall: user.zfs.storagepool.refreshall, root: user.zfs.storagepool.root } } }, { name: "configure", welcome: false })
             });
 
             $("#dropdown-configure-zfs-storagepool-activetab").on("click", "li a", function () {
@@ -13606,7 +13740,7 @@ function FnModalWelcomeContent(modal = { id }) {
                     }
                 };
 
-                FnConfigure({ cockpit: { manage: user.cockpit.manage }, disks: { base2: ` + zfsmanager.configuration.disks.base2 + ` }, loglevel: user.loglevel, samba: { manage: user.samba.manage, windowscompatibility: user.samba.windowscompatibility }, updates: { check: user.updates.check }, zfs: { filesystem: { cloneorigin: ` + zfsmanager.configuration.zfs.filesystem.cloneorigin + `, quotarestrict: ` + zfsmanager.configuration.zfs.filesystem.quotarestrict + `, readonlylockdown: ` + zfsmanager.configuration.zfs.filesystem.readonlylockdown + `, snapshotactions: ` + zfsmanager.configuration.zfs.filesystem.snapshotactions + ` }, status: { errorcolors: ` + zfsmanager.configuration.zfs.status.errorcolors + `, trimunsupported: ` + zfsmanager.configuration.zfs.status.trimunsupported + ` }, storagepool: { activetab: ` + zfsmanager.configuration.zfs.storagepool.activetab + `, boot: user.zfs.storagepool.boot, bootlockdown: user.zfs.storagepool.bootlockdown, refreshall: ` + zfsmanager.configuration.zfs.storagepool.refreshall + `, root: user.zfs.storagepool.root } } }, { name: "welcome", welcome: true })
+                FnConfigure({ cockpit: { manage: user.cockpit.manage }, disks: { base2: ` + zfsmanager.configuration.disks.base2 + ` }, loglevel: user.loglevel, samba: { manage: user.samba.manage, windowscompatibility: user.samba.windowscompatibility }, updates: { check: user.updates.check }, zfs: { filesystem: { cloneorigin: ` + zfsmanager.configuration.zfs.filesystem.cloneorigin + `, quotarestrict: ` + zfsmanager.configuration.zfs.filesystem.quotarestrict + `, readonlylockdown: ` + zfsmanager.configuration.zfs.filesystem.readonlylockdown + `, snapshotactions: ` + zfsmanager.configuration.zfs.filesystem.snapshotactions + ` }, snapshot: { filesystemlist: ` + zfsmanager.configuration.zfs.snapshot.filesystemlist + ` }, status: { errorcolors: ` + zfsmanager.configuration.zfs.status.errorcolors + `, trimunsupported: ` + zfsmanager.configuration.zfs.status.trimunsupported + ` }, storagepool: { activetab: ` + zfsmanager.configuration.zfs.storagepool.activetab + `, boot: user.zfs.storagepool.boot, bootlockdown: user.zfs.storagepool.bootlockdown, count: ` + zfsmanager.configuration.zfs.storagepool.count + `, refreshall: ` + zfsmanager.configuration.zfs.storagepool.refreshall + `, root: user.zfs.storagepool.root } } }, { name: "welcome", welcome: true })
             });
 
             $("#dropdown-welcome-zfs-storagepool-activetab").on("click", "li a", function () {
@@ -13796,7 +13930,7 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                             <label id="switch-storagepools-create-autotrim" class="onoff-ct privileged-modal"><input tabIndex="1008" type="checkbox"><span class="switch-toggle"></span></label><span>Automatic TRIM</span>
                         </div>
                         <div role="group">
-                            <label id="switch-storagepools-create-selinux" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="1009" type="checkbox"><span class="switch-toggle"></span></label><span>SELinux contexts for Samba</span>
+                            <label id="switch-storagepools-create-selinux" class="onoff-ct privileged-modal"><input tabIndex="1009" type="checkbox"><span class="switch-toggle"></span></label><span>SELinux contexts for Samba</span>
                         </div>
                         <div role="group">
                             <label id="switch-storagepools-create-force" class="onoff-ct privileged-modal"><input tabIndex="1010" type="checkbox"><span class="switch-toggle"></span></label><span>Forcefully create storage pool</span>
@@ -14589,7 +14723,7 @@ function FnModalStoragePoolConfigureContent(pool = { name, id, guid, readonly: f
                             <label id="switch-storagepool-configure-delegation-` + pool.id + `" class="onoff-ct privileged-modal" data-field-value=""><input checked="checked" tabIndex="7" type="checkbox"><span class="switch-toggle"></span></label><span>Allow non-priveleged user access based on the dataset permissions</span>
                         </div>
                         <div role="group">
-                            <label id="switch-storagepool-configure-listsnapshots-` + pool.id + `" class="onoff-ct privileged-modal" data-field-value=""><input tabIndex="8" type="checkbox"><span class="switch-toggle"></span></label><span>Display snapshots in file systems listing</span>
+                            <label id="switch-storagepool-configure-listsnapshots-` + pool.id + `" class="onoff-ct privileged-modal" data-field-value=""><input tabIndex="8" type="checkbox"><span class="switch-toggle"></span></label><span>Display snapshots in file systems list</span>
                         </div>
                         <div role="group">
                             <label id="switch-storagepool-configure-multihost-` + pool.id + `" class="onoff-ct privileged-modal" data-field-value=""><input tabIndex="9" type="checkbox"><span class="switch-toggle"></span></label><span>Multi host</span>
@@ -15533,7 +15667,7 @@ function FnModalFileSystemsCreateContent(pool = { name, id, altroot: false, feat
                         </div>
                         <label class="control-label">Options</label>
                         <div role="group">
-                            <label id="switch-storagepool-filesystems-create-selinux-` + pool.id + `" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="20" type="checkbox"><span class="switch-toggle"></span></label><span>SELinux contexts for Samba</span>
+                            <label id="switch-storagepool-filesystems-create-selinux-` + pool.id + `" class="onoff-ct privileged-modal"><input tabIndex="20" type="checkbox"><span class="switch-toggle"></span></label><span>SELinux contexts for Samba</span>
                         </div>
                         <div role="group">
                             <label id="switch-storagepool-filesystems-create-samba-share-` + pool.id + `" class="onoff-ct privileged-modal"><input tabIndex="21" type="checkbox"><span class="switch-toggle"></span></label><span>Enable Samba share</span>
