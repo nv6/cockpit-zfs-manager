@@ -3,11 +3,11 @@
   "name": "zfs",
   "priority": 100,
   "requires": {
-    "cockpit": "201"
+    "cockpit": "195"
   },
   "menu": {
     "index": {
-      "label": "File Sharing",
+      "label": "ZFS",
       "order": 31,
       "keywords": [
         {

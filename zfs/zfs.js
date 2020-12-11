@@ -10509,7 +10509,7 @@ function FnStatusGetCommand(pool = { name, id, autotrim: false, boot: false, fea
         pool.status.config.output += `<td class="config-level-` + pool.status.config.tier.level + `-sub` + (pool.status.config.tier.virtualdevice ? `-hidden` : ``) + `" colspan="3"><span class="table-ct-head">Product:</span>`; //Product
 
         if (pool.status.config.disk) {
-            disks.lsblk.blockdevices.forEach((__value, __index) => {
+            disks.lsblk.forEach((__value, __index) => {
                 if (__value.type == "disk") {
                     if (pool.status.disks.disk.upath.replace(/^\/dev\//gi, "") == __value.name || "nvme-" + __value.wwn == _value[0] || "wwn-" + __value.wwn == _value[0]) {
                         if (__value.rota == 0 || __value.rota === "false") {
@@ -11229,8 +11229,7 @@ function FnDisksAvailableGet(modal = { name, id, default: true }) {
 function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { device: [], path: [], vdev: [] }, lsblkjson }, modal = { name, id, default: true }) {
     disks.lsblk = JSON.parse(disks.lsblkjson);
     disks.regexp = {};
-
-    disks.lsblk.blockdevices.forEach((_value, _index) => {
+    disks.lsblk.forEach((_value, _index) => {
         if (_value.type == "disk") {
             let disk = {
                 id: {
@@ -11335,7 +11334,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                             <span>
                                 ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + _value.model + (_value.serial ? " (" + _value.serial + ")" : "") + `
                                 <span class="select-ct-disk-row-id">` + (!disk.id.wwn ? "/dev/" + disk.id.blockdevice : disk.id.wwn) + `</span>
-                                <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy-sec"] }) + `</span>
+                                <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy_sec"] }) + `</span>
                             </span>
                             <span>` + disk.warningicon + `</span>
                         </label>
@@ -11479,14 +11478,14 @@ function FnDisksIdentifierVirtualDeviceMappingGet() {
 
 function FnDisksLsblkGet(disks = { sizeraw: true }) {
     let process = {
-        command: ["/bin/sh", "-c", "/bin/lsblk -o label,model,mountpoint,name,partuuid,phy-sec,rota,serial,size,type,uuid,vendor,wwn -J" + (disks.sizeraw ? " -b" : "")]
+        command: ["/bin/sh", "-c", "/bin/lsblk -o label,model,mountpoint,name,partuuid,phy-sec,rota,serial,size,type,uuid,vendor,wwn" + (disks.sizeraw ? " -b" : "") + " | /usr/local/bin/jc --lsblk"]
     };
 
     FnConsole.log[2]("Disks, Lsblk, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
-        .done(function () {
+        .done(function (message, data) {
             FnConsole.log[2]("Disks, Lsblk, Get: Success");
         })
         .fail(function (message, data) {
