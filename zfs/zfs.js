@@ -11229,7 +11229,7 @@ function FnDisksAvailableGet(modal = { name, id, default: true }) {
 function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { device: [], path: [], vdev: [] }, lsblkjson }, modal = { name, id, default: true }) {
     disks.lsblk = JSON.parse(disks.lsblkjson);
     disks.regexp = {};
-    disks.lsblk.forEach((_value, _index) => {
+    disks.lsblk.blockdevices.forEach((__value, __index) => {
         if (_value.type == "disk") {
             let disk = {
                 id: {
@@ -11334,7 +11334,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                             <span>
                                 ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + _value.model + (_value.serial ? " (" + _value.serial + ")" : "") + `
                                 <span class="select-ct-disk-row-id">` + (!disk.id.wwn ? "/dev/" + disk.id.blockdevice : disk.id.wwn) + `</span>
-                                <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy_sec"] }) + `</span>
+                                <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy-sec"] }) + `</span>
                             </span>
                             <span>` + disk.warningicon + `</span>
                         </label>
@@ -11478,14 +11478,14 @@ function FnDisksIdentifierVirtualDeviceMappingGet() {
 
 function FnDisksLsblkGet(disks = { sizeraw: true }) {
     let process = {
-        command: ["/bin/sh", "-c", "/bin/lsblk -o label,model,mountpoint,name,partuuid,phy-sec,rota,serial,size,type,uuid,vendor,wwn" + (disks.sizeraw ? " -b" : "") + " | /usr/local/bin/jc --lsblk"]
+        command: ["/bin/sh", "-c", "/bin/lsblk -o label,model,mountpoint,name,partuuid,phy-sec,rota,serial,size,type,uuid,vendor,wwn -J" + (disks.sizeraw ? " -b" : "")]
     };
 
     FnConsole.log[2]("Disks, Lsblk, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
     return cockpit.spawn(process.command, { err: "out" })
-        .done(function (message, data) {
+        .done(function () {
             FnConsole.log[2]("Disks, Lsblk, Get: Success");
         })
         .fail(function (message, data) {
