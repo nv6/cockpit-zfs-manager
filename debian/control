@@ -1,0 +1,10 @@
+Source: cockpit-zfs-manager
+Section: utils
+Standards-Version: 4.4.1
+Homepage: https://github.com/45Drives/cockpit-zfs-manager
+
+Package: cockpit-zfs-manager
+Architecture: amd64
+Depends: cockpit
+Recommends: zfs
+Description: An interactive ZFS on Linux admin package for Cockpit
