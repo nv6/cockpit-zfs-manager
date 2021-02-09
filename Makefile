@@ -2,7 +2,7 @@ all:
 
 install:
 	mkdir -p $(DESTDIR)/usr/share/cockpit/zfs
-	cp -r zfs/* $(DESTDIR)/usr/share/cockpit/
+	cp -r zfs/* $(DESTDIR)/usr/share/cockpit/zfs
 
 uninstall:
 	rm -rf $(DESTDIR)/usr/share/cockpit/zfs
