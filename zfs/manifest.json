@@ -3,7 +3,7 @@
   "name": "zfs",
   "priority": 100,
   "requires": {
-    "cockpit": "195"
+    "cockpit": "201"
   },
   "menu": {
     "index": {
