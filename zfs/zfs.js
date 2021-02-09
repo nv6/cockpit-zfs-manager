@@ -10509,7 +10509,7 @@ function FnStatusGetCommand(pool = { name, id, autotrim: false, boot: false, fea
         pool.status.config.output += `<td class="config-level-` + pool.status.config.tier.level + `-sub` + (pool.status.config.tier.virtualdevice ? `-hidden` : ``) + `" colspan="3"><span class="table-ct-head">Product:</span>`; //Product
 
         if (pool.status.config.disk) {
-            disks.lsblk.forEach((__value, __index) => {
+            disks.lsblk.blockdevices.forEach((__value, __index) => {
                 if (__value.type == "disk") {
                     if (pool.status.disks.disk.upath.replace(/^\/dev\//gi, "") == __value.name || "nvme-" + __value.wwn == _value[0] || "wwn-" + __value.wwn == _value[0]) {
                         if (__value.rota == 0 || __value.rota === "false") {
@@ -11229,7 +11229,7 @@ function FnDisksAvailableGet(modal = { name, id, default: true }) {
 function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { device: [], path: [], vdev: [] }, lsblkjson }, modal = { name, id, default: true }) {
     disks.lsblk = JSON.parse(disks.lsblkjson);
     disks.regexp = {};
-    disks.lsblk.blockdevices.forEach((__value, __index) => {
+    disks.lsblk.blockdevices.forEach((_value, _index) => {
         if (_value.type == "disk") {
             let disk = {
                 id: {
