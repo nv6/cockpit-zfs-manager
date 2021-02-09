@@ -5,7 +5,7 @@
 **An interactive ZFS on Linux admin package for Cockpit.**
 ## Requirements
 
- * Cockpit: 195+
+ * Cockpit: 201+
  * NFS (Optional)
  * Samba: 4+ (Optional)
  * ZFS: 0.8+
@@ -13,16 +13,7 @@
  <details>
   <summary>Tested Distributions</summary>
   
-  * Arch Linux
-  * CentOS Linux 7
-  * CentOS Linux 8
-  * Debian 10
-  * Fedora 31
-  * Oracle Linux Server 8
-  * Proxmox VE 6
-  * Red Hat Enterprise Linux 8
-  * Ubuntu 18.04 LTS
-  * Ubuntu 19.10
+  * Ubuntu 20.04 LTS
   
 </details>
 
