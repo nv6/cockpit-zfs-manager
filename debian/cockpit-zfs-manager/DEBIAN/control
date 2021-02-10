@@ -1,0 +1,10 @@
+Package: cockpit-zfs-manager
+Version: 1.1focal-3
+Architecture: amd64
+Maintainer: bkelly <bkelly@45drives.com>
+Installed-Size: 1805
+Depends: cockpit-bridge (>= 201)
+Section: utils
+Priority: optional
+Homepage: https://github.com/45Drives/cockpit-zfs-manager
+Description: An interactive ZFS on Linux admin package for Cockpit

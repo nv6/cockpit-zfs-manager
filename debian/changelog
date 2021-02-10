@@ -1,0 +1,17 @@
+cockpit-zfs-manager (1.1focal-3) focal; urgency=medium
+
+  * Changed depends to cockpit-bridge
+
+ -- bkelly <bkelly@45drives.com>  Wed, 10 Feb 2021 00:35:56 +0000
+
+cockpit-zfs-manager (1.1focal-2) focal; urgency=medium
+
+  * Added cockpit dependancies
+
+ -- bkelly <bkelly@45drives.com>  Wed, 10 Feb 2021 00:27:15 +0000
+
+cockpit-zfs-manager (1.1focal-1) focal; urgency=medium
+
+  * Initial Release.
+
+ -- bkelly <bkelly@45drives.com>  Wed, 10 Feb 2021 00:08:25 +0000
