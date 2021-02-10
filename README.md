@@ -26,10 +26,6 @@ $ git clone https://github.com/optimans/cockpit-zfs-manager.git
 $ sudo cp -r cockpit-zfs-manager/zfs /usr/share/cockpit
 ```
 
-```bash
-$ yum install cockpit-zfs-manager
-```
-
 #### Samba
 
 Auto generated snapshot names are created in YYYY.MM.DD-HH.MM.SS format.
