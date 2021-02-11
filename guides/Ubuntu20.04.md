@@ -58,8 +58,21 @@ Install Samba
 apt install samba winbind
 ```
 
-Join AD DS:
+Remove default smb.conf
+```bash
+rm /etc/samba/smb.conf
+```
+Join Domain in Cockpit UI
+Overview -> Configuration -> Join Domain
+Required feilds are
+  * Domain Address (ex. 45lab.local)
+  * Domain Administrator Name (ex. A Domain user with rights to join machines to domain)
+  * Domain Administrator Password
 
+Alternatively, use the command line:
+```bash
+realm join DOMAIN.NAME -U user 
+```
 
 Start Samba
 
