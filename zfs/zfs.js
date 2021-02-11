@@ -11230,7 +11230,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
     disks.lsblk = JSON.parse(disks.lsblkjson);
     disks.regexp = {};
     disks.lsblk.blockdevices.forEach((_value, _index) => {
-        if (_value.type == "disk") {
+        if (_value.type == "disk" && !_value.model.includes("HDSTOR")) {
             let disk = {
                 id: {
                     blockdevice: "",
