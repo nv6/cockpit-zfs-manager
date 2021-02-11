@@ -8,48 +8,54 @@
 
 ### Cockpit
 
-Install Cockpit
+Install Cockpit and ZFS manager from 45Drives Repo
 
-
-
-Enable Cockpit:
-
-```bash
-$ sudo systemctl enable --now cockpit.socket
+```sh
+$ wget -qO - http://images.45drives.com/repo/keys/aptpubkey.asc | apt-key add -
+$ curl -o /etc/apt/sources.list.d/45drives.list http://images.45drives.com/repo/debian/45drives.list
+$ apt update
+$ apt install cockpit cockpit-zfs-manager 
 ```
 
-Create firewall rules for Cockpit:
+Firewall
 
 ```bash
 $ sudo firewall-cmd --permanent --zone=public --add-service=cockpit
 $ sudo firewall-cmd --reload
 ```
 
-Install Cockpit ZFS Manager
-
-```bash
-
-```
-
 ### ZFS
 
-Install ZFS as per own requirements from ZFS on Linux
+Install ZFS DKMS
 
 ```bash
-apt install zfs
+apt install zfs-dkms
 ```
+
+### Realmd
+
+Install realmd from 45dives apt repo
+```bash
+apt install realmd
+```
+Edit realmd to use winbind instead of sssd by default
+```bash
+vim /usr/lib/realmd/realmd-defaults.conf
+```
+Under "[active-directory]" change sssd to winbind
+default-client = winbind
+
 
 ### Samba
 
 Install Samba
 
 ```bash
+apt install samba winbind
 ```
 
 Join AD DS:
 
-```bash
-```
 
 Start Samba
 
@@ -103,12 +109,7 @@ Grant Disk Operator Privileges:
 $ sudo net rpc rights grant "DOMAIN\Domain Admins" SeDiskOperatorPrivilege -U "DOMAIN\Administrator"
 $ sudo net rpc rights grant "DOMAIN\Enterprise Admins" SeDiskOperatorPrivilege -U "DOMAIN\Administrator"
 ```
-Enable SELinux booleans:
 
-```bash
-$ sudo setsebool -P samba_export_all_ro=1 samba_export_all_rw=1
-$ sudo getsebool -a | grep samba_export
-```
 Create firewall rules for Samba:
 
 ```bash
@@ -123,33 +124,3 @@ $ sudo systemctl restart smb
 $ sudo systemctl enable smb
 ```
 
-### Local Authorisation
-
-Edit Kerberos configuration file to enable domain users to authenticate to local services:
-
-```bash
-$ sudo nano /etc/krb5.conf
-```
-
-Append to end of file
-
-```
-[plugins]
-    localauth = {
-        module = winbind:/usr/lib64/samba/krb5/winbind_krb5_localauth.so
-        enable_only = winbind
-    }
-```
-
-Create sudoers configuration file to allow sudo access to domain groups
-
-```bash
-$ sudo nano /etc/sudoers.d/DOMAIN
-```
-
-Add to file
-
-```
-DOMAIN\\Domain\ Admins ALL=(ALL) ALL
-DOMAIN\\Enterprise\ Admins ALL=(ALL) ALL
-```
