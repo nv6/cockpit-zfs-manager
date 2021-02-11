@@ -45,6 +45,10 @@ vim /usr/lib/realmd/realmd-defaults.conf
 Under "[active-directory]" change sssd to winbind
 default-client = winbind
 
+Restart realmd
+```bash
+systemctl restart realmd
+```
 
 ### Samba
 
