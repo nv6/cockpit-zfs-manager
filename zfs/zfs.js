@@ -13806,14 +13806,14 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                         <div class="ct-validation-wrapper">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="2" type="button">
-                                    <span id="btnspan-storagepools-create-virtualdevice" class="pull-left" data-field-value="mirror">Mirror</span>
+                                    <span id="btnspan-storagepools-create-virtualdevice" class="pull-left" data-field-value="raidz2">RaidZ2</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepools-create-virtualdevice" class="dropdown-menu">
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
-                                    <li class="active" value="mirror"><a tabindex="-1">Mirror</a></li>
+                                    <li value="mirror"><a tabindex="-1">Mirror</a></li>
                                     <li value="raidz1"><a tabindex="-1">RaidZ1</a></li>
-                                    <li value="raidz2"><a tabindex="-1">RaidZ2</a></li>
+                                    <li class="active" value="raidz2"><a tabindex="-1">RaidZ2</a></li>
                                     <li value="raidz3"><a tabindex="-1">RaidZ3</a></li>
                                 </ul>
                             </div>
@@ -13826,14 +13826,14 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                         <div id="validationwrapper-storagepools-create-disks-identifier" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="4" type="button">
-                                    <span id="btnspan-storagepools-create-disks-identifier" class="pull-left" data-field-value="blockdevice">Block Device</span>
+                                    <span id="btnspan-storagepools-create-disks-identifier" class="pull-left" data-field-value="vdev">Device Alias</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepools-create-disks-identifier" class="dropdown-menu">
-                                    <li class="active" value="blockdevice"><a tabindex="-1">Block Device</a></li>
+                                    <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -14289,14 +14289,14 @@ function FnModalStoragePoolsImportContent(modal = { id }) {
                         <div id="validationwrapper-storagepools-import-disks-identifier" class="ct-validation-wrapper">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1003" type="button">
-                                    <span id="btnspan-storagepools-import-disks-identifier" class="pull-left" data-field-value="disk">Disk / WWN</span>
+                                    <span id="btnspan-storagepools-import-disks-identifier" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepools-import-disks-identifier" class="dropdown-menu">
                                     <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
-                                    <li class="active" value="disk"><a tabindex="-1">Disk / WWN</a></li>
+                                    <li value="disk"><a tabindex="-1">Disk / WWN</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -19487,14 +19487,14 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
                         <div id="validationwrapper-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="2" type="button">
-                                    <span id="btnspan-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="blockdevice">Block Device</span>
+                                    <span id="btnspan-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Device Alias</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="dropdown-menu">
-                                    <li class="active" value="blockdevice"><a tabindex="-1">Block Device</a></li>
+                                    <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -19978,14 +19978,14 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                         <div id="validationwrapper-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="2" type="button">
-                                    <span id="btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="blockdevice">Block Device</span>
+                                    <span id="btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="dropdown-menu">
-                                    <li class="active" value="blockdevice"><a tabindex="-1">Block Device</a></li>
+                                    <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -20626,14 +20626,14 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                         <div id="validationwrapper-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="6" type="button">
-                                    <span id="btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="blockdevice">Block Device</span>
+                                    <span id="btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="dropdown-menu">
-                                    <li class="active" value="blockdevice"><a tabindex="-1">Block Device</a></li>
+                                    <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
                                 </ul>
                             </div>
                         </div>
