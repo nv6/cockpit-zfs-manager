@@ -78,6 +78,7 @@ let zfsmanager = {
         name: ""
     },
     version: "0.3.4.514",
+    vendorversion: "1.2.0",
     zfs: {
         storagepool: {
             boot: "",
@@ -826,10 +827,10 @@ function FnConfigurationLegacyRelocate(legacy = { path }) {
 function FnUpdatesCheck(display = { alert: true }) {
     FnConsole.log[2]("Cockpit ZFS Manager, Updates, Check: In Progress");
 
-    $.ajax({ url: "https://api.github.com/repos/optimans/cockpit-zfs-manager/releases", dataType: "json", cache: false })
+    $.ajax({ url: "https://api.github.com/repos/45drives/cockpit-zfs-manager/releases", dataType: "json", cache: false })
         .done(function (data) {
             if (data[0].name) {
-                if (FnUpdatesVersionCompare({ installed: zfsmanager.version, latest: data[0].name }) < 0) {
+                if (FnUpdatesVersionCompare({ installed: zfsmanager.vendorversion, latest: data[0].name }) < 0) {
                     setTimeout(function () {
                         $("#alert-about-update").removeClass("hidden");
                         $("#span-about-update-version").html(`<a href="` + data[0].html_url + `" target="_blank">` + data[0].name + ` ` + (data[0].prerelease === true ? `(Pre-release)` : `(Release)`) + `</a>`);
@@ -1788,7 +1789,7 @@ function FnStoragePoolsImportableGet(pools = { destroyed: false }) {
 
                                             pools.importable.disk.filter(v => { if (v.match(pool.name) && !pool.id.disk) { pool.id.disk = true; pool.idtext.push("Disk / WWN"); } });
                                             pools.importable.path.filter(v => { if (v.match(pool.name) && !pool.id.path) { pool.id.path = true; pool.idtext.push("Hardware Path"); } });
-                                            pools.importable.vdev.filter(v => { if (v.match(pool.name) && !pool.id.vdev) { pool.id.vdev = true; pool.idtext.push("Virtual Device Mapping"); } });
+                                            pools.importable.vdev.filter(v => { if (v.match(pool.name) && !pool.id.vdev) { pool.id.vdev = true; pool.idtext.push("Device Alias"); } });
 
 
                                             if (/ONLINE/g.test(pool.health) == false) {
@@ -4092,7 +4093,7 @@ function FnStoragePoolImport(pool = { name, altroot, destroyed: false, force: fa
             } else {
                 disks.fallback = true;
             }
-            disks.identifiertext = "Virtual Device Mapping";
+            disks.identifiertext = "Device Alias";
             break;
     }
 
@@ -13347,8 +13348,8 @@ function FnModalAbout() {
                     <div class="modal-body">
                         <div class="modal-ct-bodytext-1">Cockpit ZFS Manager is an interactive ZFS on Linux admin package for Cockpit.</div>
                         ` + FnDisplayInlineAlert({ status: "info", title: "A new version of Cockpit ZFS Manager is now available", description: `<span id="span-about-update-version"></span>` }, { name: "about-update", id: null, hidden: true }) + `
-                        <div><span>Version:</span> <span>` + zfsmanager.version + `</span></div>
-                        <div>Copyright &copy; 2019-2020 OPTIMANS Pty Ltd.</div>
+                        <div><span>Version:</span> <span>` + zfsmanager.vendorversion + `</span></div>
+                        <div>Copyright &copy; 2019-2020 OPTIMANS Pty Ltd. 2020-2021 45Drives</div>
                         <div>Website: <a href="https://github.com/45drives/cockpit-zfs-manager" target="_blank">github.com/45drives/cockpit-zfs-manager</a></div>
                         <div><span>Licensed under:</span> <a href="https://opensource.org/licenses/lgpl-3.0.html" target="_blank">GNU LGPL version 3</a></div>
                     </div>
@@ -13841,7 +13842,7 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                         <div id="validationwrapper-storagepools-create-disks" class="ct-validation-wrapper" tabindex="-1">
                             <ul id="listgroup-storagepools-create-disks" class="list-group dialog-list-ct" data-field="disks" data-field-type="select-disks" tabIndex="-1"></ul>
                             <span id="helpblock-storagepools-create-disks-identifierwarning" class="help-block"></span>
-                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepools-create-disks-identifierwarningzfs" class="help-block hidden">Virtual Device Mapping identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
+                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepools-create-disks-identifierwarningzfs" class="help-block hidden">Device Alias identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
                             <span id="helpblock-storagepools-create-disks-zfsmemberwarning" class="help-block"></span>
                             <span id="helpblock-storagepools-create-disks" class="help-block"></span>
                         </div>
@@ -14289,14 +14290,14 @@ function FnModalStoragePoolsImportContent(modal = { id }) {
                         <div id="validationwrapper-storagepools-import-disks-identifier" class="ct-validation-wrapper">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1003" type="button">
-                                    <span id="btnspan-storagepools-import-disks-identifier" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
+                                    <span id="btnspan-storagepools-import-disks-identifier" class="pull-left" data-field-value="vdev">Device Alias</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepools-import-disks-identifier" class="dropdown-menu">
                                     <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk / WWN</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -19502,7 +19503,7 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
                         <div id="validationwrapper-storagepool-status-disk-attach-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper" tabindex="-1">
                             <ul id="listgroup-storagepool-status-disk-attach-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="list-group dialog-list-ct" data-field="disks" data-field-type="select-disks"></ul>
                             <span id="helpblock-storagepool-status-disk-attach-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
-                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-disk-attach-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Virtual Device Mapping identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
+                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-disk-attach-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Device Alias identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
                             <span id="helpblock-storagepool-status-disk-attach-disks-zfsmemberwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                             <span id="helpblock-storagepool-status-disk-attach-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                         </div>
@@ -19978,14 +19979,14 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                         <div id="validationwrapper-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="2" type="button">
-                                    <span id="btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
+                                    <span id="btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Device Alias</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="dropdown-menu">
                                     <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -19993,7 +19994,7 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                         <div id="validationwrapper-storagepool-status-disk-replace-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper" tabindex="-1">
                             <ul id="listgroup-storagepool-status-disk-replace-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="list-group dialog-list-ct" data-field="disks" data-field-type="select-disks"></ul>
                             <span id="helpblock-storagepool-status-disk-replace-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
-                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-disk-replace-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Virtual Device Mapping identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
+                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-disk-replace-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Device Alias identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
                             <span id="helpblock-storagepool-status-disk-replace-disks-zfsmemberwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                             <span id="helpblock-storagepool-status-disk-replace-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                         </div>
@@ -20626,14 +20627,14 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                         <div id="validationwrapper-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper hidden">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="6" type="button">
-                                    <span id="btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Virtual Device Mapping</span>
+                                    <span id="btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="pull-left" data-field-value="vdev">Device Alias</span>
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="dropdown-menu">
                                     <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li class="active" value="vdev"><a tabindex="-1">Virtual Device Mapping</a></li>
+                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -20641,7 +20642,7 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                         <div id="validationwrapper-storagepool-status-virtualdevice-add-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="ct-validation-wrapper" tabindex="-1">
                             <ul id="listgroup-storagepool-status-virtualdevice-add-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="list-group dialog-list-ct" data-field="disks" data-field-type="select-disks"></ul>
                             <span id="helpblock-storagepool-status-virtualdevice-add-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
-                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-virtualdevice-add-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Virtual Device Mapping identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
+                            ` + (zfsmanager.zfs.warnings.nvmevdev ? `<span id="helpblock-storagepool-status-virtualdevice-add-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block hidden">Device Alias identifiers for NVMe devices may not have been created due to a bug in the <a href="https://github.com/zfsonlinux/zfs/issues/9730" target="_blank">ZFS software</a>. Update ZFS to 0.8.3 for fix.</span>` : ``) + `
                             <span id="helpblock-storagepool-status-virtualdevice-add-disks-zfsmemberwarning-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                             <span id="helpblock-storagepool-status-virtualdevice-add-disks-` + pool.status.config.items.index + `-` + pool.id + `" class="help-block"></span>
                         </div>
