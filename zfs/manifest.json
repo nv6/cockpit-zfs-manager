@@ -9,9 +9,23 @@
     "index": {
       "label": "ZFS",
       "order": 31,
+      "docs": [
+        {
+            "label": "Managing ZFS",
+            "url": "http://knowledgebase.45drives.com/kb/kb045280-managing-zfs-in-houston-ui/"
+        },
+        {
+          "label": "Managing SMB/CIFS",
+          "url": "http://knowledgebase.45drives.com/kb/kb045281-managing-smb-cifs-in-houston-ui/"
+        },
+        {
+          "label": "Managing NFS",
+          "url": "http://knowledgebase.45drives.com/kb/kb045282-managing-nfs-in-houston-ui/"
+        }
+      ],
       "keywords": [
         {
-          "matches": [ "@feature", "alt root", "cache", "checksum", "clone", "dataset", "deduplication", "disk", "drive", "encryption", "features", "filesystem", "mirror", "mount", "nfs", "pool", "raid-z", "refreservation", "resilver", "samba", "share", "scrub", "snapshot", "spare", "special", "storage pool", "trim", "unmount", "vdev", "raidz", "virtual device", "zfs manager", "zfs", "zpool" ]
+          "matches": [ "@feature", "alt root", "cache", "checksum", "clone", "dataset", "deduplication", "disk", "drive", "encryption", "features", "filesystem", "mirror", "mount", "nfs", "pool", "raid-z", "refreservation", "resilver", "samba", "share", "scrub", "smb", "snapshot", "spare", "special", "storage pool", "trim", "unmount", "vdev", "raidz", "virtual device", "zfs manager", "zfs", "zpool" ]
         }
       ]
 
