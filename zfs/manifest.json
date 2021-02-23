@@ -7,12 +7,12 @@
   },
   "menu": {
     "index": {
-      "label": "ZFS",
+      "label": "ZFS + File Sharing",
       "order": 31,
       "docs": [
         {
-            "label": "Managing ZFS",
-            "url": "http://knowledgebase.45drives.com/kb/kb045280-managing-zfs-in-houston-ui/"
+          "label": "Managing ZFS",
+          "url": "http://knowledgebase.45drives.com/kb/kb045280-managing-zfs-in-houston-ui/"
         },
         {
           "label": "Managing SMB/CIFS",
