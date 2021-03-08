@@ -2981,7 +2981,7 @@ function FnStoragePoolConfigureFeaturesFail(pool = { name, id }) {
 
 function FnStoragePoolCreate(pool = { name, ashift, autoexpand, autoreplace, autotrim, force, virtualdevice }, filesystem = { compression, dedup, recordsize, refreservationpercent, selinux }, disks = { id: [] }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "create", "-o", "ashift=" + pool.ashift, "-o", "autoexpand=" + pool.autoexpand, "-o", "autoreplace=" + pool.autoreplace, "-o", "autotrim=" + pool.autotrim, "-O", "aclinherit=passthrough", "-O", "acltype=posixacl", "-O", "casesensitivity=sensitive", "-O", "compression=" + filesystem.compression, "-O", "normalization=formD", "-O", "recordsize=" + filesystem.recordsize, "-O", "sharenfs=off", "-O", "sharesmb=off", "-O", "utf8only=on", "-O", "xattr=sa", pool.name]
+        command: ["/sbin/zpool", "create", "-o", "ashift=" + pool.ashift, "-o", "autoexpand=" + pool.autoexpand, "-o", "autoreplace=" + pool.autoreplace, "-o", "autotrim=" + pool.autotrim, "-O", "aclinherit=passthrough", "-O", "acltype=posixacl", "-O", "casesensitivity=sensitive", "-O", "compression=" + filesystem.compression, "-O", "normalization=formD", "-O", "recordsize=" + filesystem.recordsize, "-O", "sharenfs=off", "-O", "sharesmb=off", "-O", "utf8only=on", "-O", "xattr=sa", pool.name]
     };
     let modal = {
         hide: true
@@ -3344,7 +3344,7 @@ function FnStoragePoolDestroy(pool = { name, id, altroot: false, force: false, l
 
 function FnStoragePoolDestroyCommand(pool = { name, id, force: false }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "destroy", pool.name]
+        command: ["/sbin/zpool", "destroy", pool.name]
     };
 
     if (pool.force) {
@@ -3671,7 +3671,7 @@ function FnStoragePoolDiskDetach(pool = { name, id }, disk = { id, labelclear: f
 
 function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive: false }, display = { silent: false }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "labelclear", disk.id]
+        command: ["/sbin/zpool", "labelclear", disk.id]
     };
 
     if (disk.inactive) {
@@ -3704,7 +3704,7 @@ function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive:
 
 function FnStoragePoolDiskOffline(pool = { name, id }, disk = { id, force: false, temporary: false }, modal = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "offline", pool.name, disk.id]
+        command: ["/sbin/zpool", "offline", pool.name, disk.id]
     };
 
     if (disk.force) {
@@ -3787,7 +3787,7 @@ function FnStoragePoolDiskOnline(pool = { name, id, scrub: false }, disk = { id,
 
 function FnStoragePoolDiskReplace(pool = { name, id, force: false }, disk = { id, idnew }, modal = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "replace", pool.name, disk.id, disk.idnew]
+        command: ["/sbin/zpool", "replace", pool.name, disk.id, disk.idnew]
     };
 
     if (pool.force) {
@@ -3911,7 +3911,7 @@ function FnStoragePoolExport(pool = { name, id, altroot: false, force: false, re
 
 function FnStoragePoolExportCommand(pool = { name, id, force: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "export", pool.name]
+        command: ["/sbin/zpool", "export", pool.name]
     };
 
     if (pool.force) {
@@ -4237,7 +4237,7 @@ function FnStoragePoolImport(pool = { name, altroot, destroyed: false, force: fa
 
 function FnStoragePoolRefreservationSet(pool = { name, id }, filesystem = { refreservation }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "set", "refreservation=" + filesystem.refreservation, pool.name]
+        command: ["/sbin/zfs", "set", "refreservation=" + filesystem.refreservation, pool.name]
     };
 
     FnConsole.log[2]("Storage Pools, Refreservation, Set: In Progress");
@@ -4796,7 +4796,7 @@ function FnStoragePoolUpgradeFail(pool = { name, id }, process = { data, message
 
 function FnStoragePoolVirtualDeviceAdd(pool = { name, id, force: false, virtualdevice }, disks = { id: [] }, modal = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "add", pool.name]
+        command: ["/sbin/zpool", "add", pool.name]
     };
 
     modal.hide = true;
@@ -7781,7 +7781,7 @@ function FnFileSystemConfigureInheritance(pool = { name, id }, filesystem = { na
     filesystem.properties.inherit.forEach((_value, _index) => {
         promise = promise.then(_ => new Promise(resolve =>
             setTimeout(function () {
-                process.command = ["pkexec", "/sbin/zfs", "inherit", _value, filesystem.name];
+                process.command = ["/sbin/zfs", "inherit", _value, filesystem.name];
 
                 FnConsole.log[2]("File Systems, Configure, Inheritance: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
                 FnConsole.log[3](FnConsoleCommand({ command: process.command }));
@@ -8103,7 +8103,7 @@ function FnFileSystemDestroy(pool = { name, id, altroot: false, readonly: false 
 
 function FnFileSystemDestroyCommand(pool = { name, id }, filesystem = { name, id, force: false, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "destroy", filesystem.name]
+        command: ["/sbin/zfs", "destroy", filesystem.name]
     };
 
     if (filesystem.force) {
@@ -8189,7 +8189,7 @@ function FnFileSystemLock(pool = { name, id }, filesystem = { name, id, type }, 
 
 function FnFileSystemMount(pool = { name, id, altroot: false, readonly: false }, filesystem = { name, id, overlay: true, type }, samba = { enable: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "mount", filesystem.name]
+        command: ["/sbin/zfs", "mount", filesystem.name]
     };
 
     if (filesystem.overlay) {
@@ -8441,7 +8441,7 @@ function FnFileSystemRename(pool = { name, id, altroot: false }, filesystem = { 
 
 function FnFileSystemRenameCommand(pool = { name, id }, filesystem = { name, id, createnonexistparents: false, force: false, namenew, parent }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "rename", filesystem.name, filesystem.namenew]
+        command: ["/sbin/zfs", "rename", filesystem.name, filesystem.namenew]
     };
 
     if (filesystem.force) {
@@ -8539,7 +8539,7 @@ function FnFileSystemSelinuxContextsSambaSet(pool = { name, id }, filesystem = {
 
 function FnFileSystemShareSmbDisable(pool = { name, id }, filesystem = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "set", "sharesmb=off", filesystem.name]
+        command: ["/sbin/zfs", "set", "sharesmb=off", filesystem.name]
     };
 
     FnConsole.log[2]("File Systems, Share SMB, Disable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
@@ -8560,7 +8560,7 @@ function FnFileSystemShareSmbDisable(pool = { name, id }, filesystem = { name, i
 
 function FnFileSystemShareSmbEnable(pool = { name, id }, filesystem = { name, id }) {
     let process = {
-        command: [ "pkexec", "/sbin/zfs", "set", "sharesmb=on", filesystem.name]
+        command: ["/sbin/zfs", "set", "sharesmb=on", filesystem.name]
     };
 
     FnConsole.log[2]("File Systems, Share SMB, Enable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
@@ -8909,7 +8909,7 @@ function FnFileSystemUnmount(pool = { name, id, altroot: false, readonly: false 
 
 function FnFileSystemUnmountCommand(pool = { name, id }, filesystem = { name, id, force: false, lock: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "unmount", filesystem.name]
+        command: ["/sbin/zfs", "unmount", filesystem.name]
     };
 
     if (filesystem.force) {
@@ -9366,7 +9366,7 @@ function FnSnapshotChildSnapshotsGet(pool = { name, id }, snapshot = { name, id,
 
 function FnSnapshotClone(pool = { name, id, altroot: false }, snapshot = { name, id, clone: { name, createnonexistparents: false, parent } }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
+        command: [/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
     };
 
     if (snapshot.clone.createnonexistparents) {
@@ -9463,7 +9463,7 @@ function FnSnapshotCloneFail(pool = { name, id }, snapshot = { name, id }, proce
 
 function FnSnapshotCreate(pool = { name, id }, snapshot = { name, id, recursive: false }, modal = { name, id }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "snapshot", snapshot.name]
+        command: ["/sbin/zfs", "snapshot", snapshot.name]
     };
 
     modal.hide = true;
@@ -9647,7 +9647,7 @@ function FnSnapshotDestroy(pool = { name, id, altroot: false, readonly: false },
 
 function FnSnapshotDestroyCommand(pool = { name, id }, snapshot = { name, id, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "destroy", snapshot.name]
+        command: ["/sbin/zfs", "destroy", snapshot.name]
     };
 
     if (snapshot.recursive) {
@@ -9698,7 +9698,7 @@ function FnSnapshotDestroyFail(pool = { name, id }, snapshot = { name, id }, pro
 
 function FnSnapshotRename(pool = { name, id }, snapshot = { name, id, namenew, recursive: false }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "rename", snapshot.name, snapshot.namenew]
+        command: ["/sbin/zfs", "rename", snapshot.name, snapshot.namenew]
     };
     let modal = {
         hide: true
@@ -9918,7 +9918,7 @@ function FnSnapshotRollBack(pool = { name, id, altroot: false, readonly: false }
 
 function FnSnapshotRollBackCommand(pool = { name, id }, snapshot = { name, id, force: false, recursive: false, recursiveall: false }, display = { refresh: true }) {
     let process = {
-        command: ["pkexec", "/sbin/zfs", "rollback", snapshot.name]
+        command: ["/sbin/zfs", "rollback", snapshot.name]
     };
 
     if (snapshot.force) {
@@ -11494,7 +11494,7 @@ function FnDisksStoragePoolsAttachedGet(pool = { name, id }, disks = { id: { blo
 
 function FnDisksStoragePoolsImportableAttachedGet() {
     let process = {
-        command: ["pkexec", "/sbin/zpool", "import", "-d", "/dev"]
+        command: ["/sbin/zpool", "import", "-d", "/dev"]
     };
 
     FnConsole.log[2]("Disks, Storage Pools, Importable, Attached, Get: In Progress");
@@ -11534,7 +11534,7 @@ function FnDisksStoragePoolsImportableGet() {
 
 function FnSambaConfigurationReload() {
     let process = {
-        command: ["pkexec", "/usr/bin/smbcontrol", "all", "reload-config"]
+        command: ["/usr/bin/smbcontrol", "all", "reload-config"]
     };
 
     FnConsole.log[2]("Samba, Configuration, Reload: In Progress");
