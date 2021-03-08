@@ -1078,44 +1078,25 @@ function FnCockpitPackageSosReportDelete() {
 }
 
 function FnCockpitPermissionsGet() {
-    //FnCockpitElementsDisable();
     FnConsole.log[2]("Cockpit, Permissions, Get: In Progress");
+
     zfsmanager.cockpit.permission = cockpit.permission({ admin: true });
-    zfsmanager.cockpit.zfspermission = cockpit.permission({ group: "zfsadmin" });
-    zfsmanager.cockpit.smbpermission = cockpit.permission({ group: "smbadmin" });
 
-    $(zfsmanager.cockpit.smbpermission).on("changed", function () {
+    $(zfsmanager.cockpit.permission).on("changed", function () {
         zfsmanager.user.admin = zfsmanager.cockpit.permission.allowed;
-        zfsmanager.user.zfs = zfsmanager.cockpit.zfspermission.allowed;
-        zfsmanager.user.smb = zfsmanager.cockpit.smbpermission.allowed;
-        FnConsole.log[2]("AFTER Cockpit, Permissions, Get: admin: " + zfsmanager.cockpit.permission.allowed )
-        FnConsole.log[2]("Cockpit, Permissions, Get: zfs: " + zfsmanager.cockpit.zfspermission.allowed )
-        FnConsole.log[2]("Cockpit, Permissions, Get: smb: " + zfsmanager.cockpit.smbpermission.allowed )
-
         zfsmanager.user.name = (zfsmanager.cockpit.permission.user ? zfsmanager.cockpit.permission.user.name : "");
 
-        if (zfsmanager.user.admin || zfsmanager.user.zfs ) {
+        if (zfsmanager.user.admin) {
             FnConsole.log[2]("Cockpit, Permissions, Get: Success");
-            FnConsole.log[2]("Cockpit, Permissions, Get: Success, for admin user: " + zfsmanager.user.name );
-            
-            zfsmanager.user.admin = true;
+
             FnFirstStepsPrivileged();
-            //FnCockpitElementsEnable()
-        } else if (zfsmanager.user.smb) {
-            FnConsole.log[2]("Cockpit, Permissions, Get: Success");
-            FnConsole.log[2]("Cockpit, Permissions, Get: Success, for smb user: " + zfsmanager.user.name );
-            FnConsole.log[2]("PERM GET -> FnCockpitSmbDisable: " + zfsmanager.user.name );
-            
-            //zfsmanager.user.admin = true
-            FnCockpitSmbDisable();
         } else {
-            FnConsole.warn("Cockpit, Permissions, Get: Warning, Message: " + zfsmanager.user.name + " does not have admin permissions");
-            FnConsole.log[2]("Get Perm -> FnCockpitElementsDisable: " + zfsmanager.user.name );
+            FnConsole.warn("Cockpit, Permissions, Get: Warning, Message: " + zfsmanager.user.name + " does not have administrator permissions");
+
             FnCockpitElementsDisable();
         }
     });
 }
-
 //#endregion
 
 //#region ZFS
