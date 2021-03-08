@@ -884,7 +884,7 @@ function FnVersionWarning() {
 
 function FnCockpitElementsDisable() {
     let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
-    FnConsole.log[2]( "IN FnCockpitElementsDisable: " + zfsmanager.user.name );
+
     //Disable buttons
     $("#btn-configure").addClass("disabled");
     $("#btn-storagepools-filesystems-unlock").addClass("disabled");
@@ -918,101 +918,9 @@ function FnCockpitElementsDisable() {
     $("[id^=btn-storagepool-filesystem-unlock-icon-]").removeClass("pficon-ct-locked");
 }
 
-function FnCockpitElementsEnable() {
-    let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
-    FnConsole.log[2]( "IN FnCockpitElementsEnable: " + zfsmanager.user.name );
-    //Disable buttons
-    $("#btn-configure").addClass("enabled");
-    $("#btn-storagepools-filesystems-unlock").addClass("enabled");
-    $("#btn-storagepools-create").prop("title", message + " create a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("enabled");
-    $("#btn-storagepools-import").prop("title", message + " import a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("enabled");
-    $("[id^=btn-storagepool-filesystems-create-]").prop("title", message + " create a file system").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("enabled");
-    $("[id^=btn-storagepool-snapshots-create-]").prop("title", message + " create a snapshot").attr("data-placement", "auto top").attr("data-toggle", "tooltip").addClass("enabled");
-    $("[id^=btn-storagepool-snapshot-dropdown-]").prop("title", message + " manage this snapshot").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("enabled");
-    $("[id^=btn-storagepool-status-dropdown-]").prop("title", message + " manage this storage pool").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("enabled");
-
-    //Disable privileged items
-    $(".privileged").addClass("enabled");
-
-    //Disable privileged modal items
-    $(".privileged-modal").prop("enabled", true);
-    $(".privileged-modal button").prop("enabled", true);
-    $(".privileged-modal input").prop("enabled", true);
-
-    //Disable sliders
-    $("#validationwrapper-storagepools-create-refreservation .slider-pf .slider *").addClass("enabled");
-    $("#slider-storagepools-create-refreservation").slider("enable");
-    $("[id^=validationwrapper-storagepool-filesystems-create-quota-] .slider-pf .slider *").addClass("enabled");
-    $("[id^=slider-storagepool-filesystems-create-quota-]").slider("enable");
-    $("[id^=validationwrapper-storagepool-filesystem-configure-quota-] .slider-pf .slider *").addClass("enabled");
-    $("[id^=slider-storagepool-filesystem-configure-quota-]").slider("enable");
-    $("[id^=validationwrapper-storagepool-filesystem-configure-refreservation-] .slider-pf .slider *").addClass("enabled");
-    $("[id^=slider-storagepool-filesystem-configure-refreservation-]").slider("enable");
-
-    //Remove primary color from unlock file system menu item
-    $("[id^=btn-storagepool-filesystem-unlock-] > strong").addClass("text-ct-locked");
-    $("[id^=btn-storagepool-filesystem-unlock-icon-]").addClass("pficon-ct-locked");
-}
-
-function FnCockpitSmbDisable() {
-    let message = `The user <strong>` + zfsmanager.user.name + `</strong> is not permitted to`;
-    FnConsole.log[2]( "IN" + "FnCockpitSmbDisable: " + zfsmanager.user.name );
-    
-    // Disable buttons
-    $("#btn-configure").prop("title", message + " configure ZFS Manager").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("#btn-storagepools-filesystems-unlock").prop("title", message + " unlock file system").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-   
-    $("#btn-storagepools-create").prop("title", message + " create a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("#btn-storagepools-import").prop("title", message + " import a storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("[id^=btn-storagepool-configure-]").prop("title", message + " configuring storage pool").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    //$("[id^=btn-storagepool-filesystem-configure-]").prop("title", message + " configuring file systems").attr("data-placement", "auto bottom").attr("data-toggle", "tooltip").addClass("disabled");
-    $("[id^=btn-storagepool-status-dropdown-]").prop("title", message + " manage this storage pool").attr("data-placement", "auto left").attr("data-toggle", "tooltip").addClass("disabled");
-    
-    //Disable privileged items
-    $(".privileged").addClass("disabled");
-
-    //Disable privileged modal items
-    $(".privileged-modal").prop("disabled", true);
-    $(".privileged-modal button").prop("disabled", true);
-    $(".privileged-modal input").prop("disabled", true);
-
-    //Enable Access to Some Priveleged Modals
-    //$("#modal-storagepool-filesystem-configure-").prop("disabled", false);
-
-    //Enable Access to Some of Privileged buttons 
-    $("[id^=btn-storagepool-snapshot-]").removeClass("disabled");
-    $("[id^=btn-storagepool-snapshots-create-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-samba-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-snapshot-create-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-rename-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-destroy-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-unmount-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-changepassphrase-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystems-create-]").removeClass("disabled");
-    $("[id^=btn-storagepool-filesystem-configure-]").removeClass("disabled");
-
-    //Disable sliders
-    $("#validationwrapper-storagepools-create-refreservation .slider-pf .slider *").addClass("disabled");
-    $("#slider-storagepools-create-refreservation").slider("disable");
-    $("[id^=validationwrapper-storagepool-filesystems-create-quota-] .slider-pf .slider *").addClass("disabled");
-    $("[id^=slider-storagepool-filesystems-create-quota-]").slider("disable");
-    $("[id^=validationwrapper-storagepool-filesystem-configure-quota-] .slider-pf .slider *").addClass("disabled");
-    $("[id^=slider-storagepool-filesystem-configure-quota-]").slider("disable");
-    $("[id^=validationwrapper-storagepool-filesystem-configure-refreservation-] .slider-pf .slider *").addClass("disabled");
-    $("[id^=slider-storagepool-filesystem-configure-refreservation-]").slider("disable");
-
-    //Remove primary color from unlock file system menu item
-    $("[id^=btn-storagepool-filesystem-unlock-] > strong").removeClass("text-ct-locked");
-    $("[id^=btn-storagepool-filesystem-unlock-icon-]").removeClass("pficon-ct-locked");
-}
-
 function FnCockpitElementsUpdate() {
-    if (!zfsmanager.user.admin && !zfsmanager.user.zfs && !zfsmanager.user.smb ) {
-        FnConsole.log[2]("ElemUpdate -> FnCockpitElementsDisable: " + zfsmanager.user.name );
+    if (!zfsmanager.user.admin) {
         FnCockpitElementsDisable();
-    } else if (zfsmanager.user.smb && !zfsmanager.user.admin && !zfsmanager.user.zfs ) {
-        FnConsole.log[2]("ElemUpdate -> FnCockpitSmbDisable: " + zfsmanager.user.name );
-        FnCockpitSmbDisable();
     }
 }
 
