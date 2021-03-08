@@ -9366,7 +9366,7 @@ function FnSnapshotChildSnapshotsGet(pool = { name, id }, snapshot = { name, id,
 
 function FnSnapshotClone(pool = { name, id, altroot: false }, snapshot = { name, id, clone: { name, createnonexistparents: false, parent } }) {
     let process = {
-        command: [/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
+        command: ["/sbin/zfs", "clone", "-o", "sharenfs=off", "-o", "sharesmb=off", snapshot.name, snapshot.clone.name]
     };
 
     if (snapshot.clone.createnonexistparents) {
