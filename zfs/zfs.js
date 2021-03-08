@@ -11404,7 +11404,7 @@ function FnDisksStoragePoolsImportableAttachedGet() {
     FnConsole.log[2]("Disks, Storage Pools, Importable, Attached, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Storage Pools, Importable, Attached, Get: Success");
         })
