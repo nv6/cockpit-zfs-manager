@@ -24,9 +24,7 @@ let zfsmanager = {
     cockpit: {
         datelocale: (navigator.languages && navigator.languages.length ? navigator.languages[0] : (navigator.userLanguage || navigator.language || navigator.browserLanguage || cockpit.language)),
         legacy: false,
-        permission: null,
-        zfspermission: null,
-        smbpermission: null
+        permission: null
     },
     configuration: {
         cockpit: {
@@ -72,8 +70,6 @@ let zfsmanager = {
     },
     user: {
         admin: true,
-        zfs: false,
-        smb: false,
         configuration: false,
         name: ""
     },
@@ -11385,7 +11381,7 @@ function FnDisksLsblkGet(disks = { sizeraw: true }) {
 
 function FnDisksStoragePoolsAttachedGet(pool = { name, id }, disks = { id: { blockdevice: true } }) {
     let process = {
-        command: ["/bin/sh", "-c", ((zfsmanager.user.admin || !zfsmanager.user.name) ? "ZPOOL_SCRIPTS_AS_ROOT=1 " : "") + "/sbin/zpool status -P " + (disks.id.blockdevice ? "-L " : "") + "-c upath" + (pool.name ? ` "` + pool.name + `"` : "")]
+        command: ["/bin/sh", "-c", ((zfsmanager.user.name == "root" || !zfsmanager.user.name) ? "ZPOOL_SCRIPTS_AS_ROOT=1 " : "") + "/sbin/zpool status -P " + (disks.id.blockdevice ? "-L " : "") + "-c upath" + (pool.name ? ` "` + pool.name + `"` : "")]
     };
 
     FnConsole.log[2]("Disks, Storage Pools, Attached, Get: In Progress");
