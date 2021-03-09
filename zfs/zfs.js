@@ -9381,7 +9381,7 @@ function FnSnapshotCreate(pool = { name, id }, snapshot = { name, id, recursive:
 
     $("#spinner-" + modal.name + "-" + modal.id + " span").text("Creating snapshot" + (snapshot.recursive ? "s" : "") + "...");
 
-    return cockpit.spawn(process.command, { err: "out"})
+    return cockpit.spawn(process.command, { err: "out", superuser: "require"})
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Snapshot successfully created", description: snapshot.name, breakword: false }, { name: "snapshot-create", id: snapshot.id, timeout: 4 });
 
