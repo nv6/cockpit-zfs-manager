@@ -696,7 +696,7 @@ function FnConfigurationDirectoryCreate() {
     FnConsole.log[2]("Cockpit ZFS Manager, Configuration Directory, Create: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require"  })
         .done(function (data) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "Cockpit ZFS Manager, Configuration Directory, Create:" }));
 
@@ -719,7 +719,7 @@ function FnConfigurationDirectoryRuntimeCreate() {
     FnConsole.log[2]("Cockpit ZFS Manager, Runtime Configuration Directory, Create: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function (data) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "Cockpit ZFS Manager, Runtime Configuration Directory, Create:" }));
 
@@ -1573,7 +1573,7 @@ function FnStoragePoolsImportableBlockDeviceGet(pools = { destroyed: false }) {
     FnConsole.log[2]("Storage Pools, Importable, Block Device, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Storage Pools, Importable, Block Device, Get: Success");
         })
@@ -1783,7 +1783,7 @@ function FnStoragePoolsImportableHardwarePathGet(pools = { destroyed: false }) {
     FnConsole.log[2]("Storage Pools, Importable, Hardware Path, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Storage Pools, Importable, Hardware Path, Get: Success");
         })
@@ -1800,7 +1800,7 @@ function FnStoragePoolsImportableVirtualDeviceMappingGet(pools = { destroyed: fa
     FnConsole.log[2]("Storage Pools, Importable, Virtual Device Mapping, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Storage Pools, Importable, Virtual Device Mapping, Get: Success");
         })
@@ -2921,7 +2921,7 @@ function FnStoragePoolCreate(pool = { name, ashift, autoexpand, autoreplace, aut
 
     $("#spinner-storagepools-create span").text("Creating storage pool...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Storage Pool successfully created", description: pool.name, breakword: false }, { name: "storagepool-create", id: pool.id, timeout: 4 });
 
@@ -3258,7 +3258,7 @@ function FnStoragePoolDestroyCommand(pool = { name, id, force: false }) {
     FnConsole.log[1]("Storage Pools, Destroy: In Progress, Pool: " + pool.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Storage Pool successfully destroyed", description: pool.name, breakword: false }, { name: "storagepool-destroy", id: pool.id, timeout: 4 });
 
@@ -3585,7 +3585,7 @@ function FnStoragePoolDiskLabelClear(pool = { name, id }, disk = { id, inactive:
     FnConsole.log[2]("Storage Pools, Disk Label, Clear: In Progress, Disk: " + disk.id);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             if (!display.silent) {
                 FnDisplayAlert({ status: "success", title: "Disk label successfully cleared", description: disk.id, breakword: false }, { name: "storagepool-disk-labelclear", id: pool.id, timeout: 4 });
@@ -3623,7 +3623,7 @@ function FnStoragePoolDiskOffline(pool = { name, id }, disk = { id, force: false
 
     $("#spinner-" + modal.name + "-" + modal.id + " span").text("Setting disk offline...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Disk successfully set offline", description: disk.id, breakword: false }, { name: "storagepool-disk-offline", id: pool.id, timeout: 4 });
 
@@ -3703,7 +3703,7 @@ function FnStoragePoolDiskReplace(pool = { name, id, force: false }, disk = { id
 
     $("#spinner-" + modal.name + "-" + modal.id + " span").text("Replacing disk...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Disk replaced successfully on Storage Pool", description: pool.name, breakword: false }, { name: "storagepool-disk-replace", id: pool.id, timeout: 4 });
 
@@ -3825,7 +3825,7 @@ function FnStoragePoolExportCommand(pool = { name, id, force: false }, display =
     FnConsole.log[1]("Storage Pools, Export: In Progress, Pool: " + pool.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Storage Pool successfully exported", description: pool.name, breakword: false }, { name: "storagepool-export", id: pool.id, timeout: 4 });
 
@@ -4147,7 +4147,7 @@ function FnStoragePoolRefreservationSet(pool = { name, id }, filesystem = { refr
     FnConsole.log[2]("Storage Pools, Refreservation, Set: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Storage Pools, Refreservation, Set: Success, Pool: " + pool.name);
         })
@@ -7585,7 +7585,7 @@ function FnFileSystemConfigure(pool = { name, id, altroot: false, readonly: fals
 
 function FnFileSystemConfigureCommand(pool = { name, id, altroot: false }, filesystem = { name, id, mountpoint, properties: { new: [] }, type }, samba = { restart: false }, modal = { id }) {
     let process = {
-        command: ["/bin/sh", "-c", "pkexec /sbin/zfs set " + filesystem.properties.new.join(" ") + " " + `"` + filesystem.name + `"`]
+        command: ["/bin/sh", "-c", "/sbin/zfs set " + filesystem.properties.new.join(" ") + " " + `"` + filesystem.name + `"`]
     };
 
     modal.hide = true;
@@ -7595,7 +7595,7 @@ function FnFileSystemConfigureCommand(pool = { name, id, altroot: false }, files
 
     $("#spinner-storagepool-filesystem-configure-" + filesystem.id + " span").text("Configuring " + filesystem.type.toLowerCase() + "...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "File System successfully configured", description: filesystem.name, breakword: false }, { name: "filesystem-configure", id: filesystem.id, timeout: 4 });
 
@@ -7690,7 +7690,7 @@ function FnFileSystemConfigureInheritance(pool = { name, id }, filesystem = { na
                 FnConsole.log[2]("File Systems, Configure, Inheritance: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
                 FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-                cockpit.spawn(process.command, { err: "out" })
+                cockpit.spawn(process.command, { err: "out", superuser: "require" })
                     .done(function () {
                         FnConsole.log[2]("File Systems, Configure, Inheritance: Success, Pool: " + pool.name + ", File System: " + filesystem.name);
 
@@ -7793,7 +7793,7 @@ function FnFileSystemCreate(pool = { name, id, altroot: false }, filesystem = { 
 
     $("#spinner-storagepool-filesystems-create-" + pool.id + " span").text("Creating file system...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "File System successfully created", description: filesystem.name, breakword: false }, { name: "filesystem-create", id: filesystem.id, timeout: 4 });
 
@@ -8023,7 +8023,7 @@ function FnFileSystemDestroyCommand(pool = { name, id }, filesystem = { name, id
     FnConsole.log[1]("File Systems, Destroy: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "File System successfully destroyed", description: filesystem.name, breakword: false }, { name: "filesystem-destroy", id: filesystem.id, timeout: 4 });
 
@@ -8105,7 +8105,7 @@ function FnFileSystemMount(pool = { name, id, altroot: false, readonly: false },
 
     $("#spinner-storagepool-filesystem-mount-" + filesystem.id + " span").text("Mounting " + filesystem.type.toLowerCase() + "...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "File System successfully mounted", description: filesystem.name, breakword: false }, { name: "filesystem-mount", id: filesystem.id, timeout: 4 });
 
@@ -8358,7 +8358,7 @@ function FnFileSystemRenameCommand(pool = { name, id }, filesystem = { name, id,
     FnConsole.log[1]("File Systems, Rename: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function (data, message) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "File Systems, Rename:" }));
 
@@ -8449,7 +8449,7 @@ function FnFileSystemShareSmbDisable(pool = { name, id }, filesystem = { name, i
     FnConsole.log[2]("File Systems, Share SMB, Disable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("File Systems, Share SMB, Disable: Success, Pool: " + pool.name + ", File System: " + filesystem.name);
         })
@@ -8470,7 +8470,7 @@ function FnFileSystemShareSmbEnable(pool = { name, id }, filesystem = { name, id
     FnConsole.log[2]("File Systems, Share SMB, Enable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("File Systems, Share SMB, Enable: Success, Pool: " + pool.name + ", File System: " + filesystem.name);
         })
@@ -8599,7 +8599,7 @@ function FnFileSystemUnlock(pool = { name, id, altroot: false, readonly: false }
         $("#spinner-" + modal.name + modal.id + " span").text("Unlocking " + filesystem.type.toLowerCase() + "...");
     }
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function (data, message) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "File Systems, Unlock:" }));
 
@@ -8823,7 +8823,7 @@ function FnFileSystemUnmountCommand(pool = { name, id }, filesystem = { name, id
     FnConsole.log[2]("File Systems, Unmount: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "File System successfully unmounted", description: filesystem.name, breakword: false }, { name: "filesystem-unmount", id: filesystem.id, timeout: 4 });
 
@@ -9282,7 +9282,7 @@ function FnSnapshotClone(pool = { name, id, altroot: false }, snapshot = { name,
 
     $("#spinner-storagepool-snapshot-clone-" + snapshot.id + " span").text("Cloning snapshot...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function (data, message) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "Snapshots, Clone:" }));
 
@@ -9432,7 +9432,7 @@ function FnSnapshotCreateDateGet(pool = { name, id }, snapshot = { name, id, rec
 
     $("#spinner-" + modal.name + "-" + modal.id + " span").text("Creating snapshot" + (snapshot.recursive ? "s" : "") + "...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function (data) {
             FnConsole.log[4](FnConsoleVerbose({ data: data, message: "Snapshots, Create, Date, Get:" }));
 
@@ -9564,7 +9564,7 @@ function FnSnapshotDestroyCommand(pool = { name, id }, snapshot = { name, id, re
     FnConsole.log[1]("Snapshots, Destroy: In Progress, Pool: " + pool.name + ", Snapshot: " + snapshot.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Snapshot successfully destroyed", description: snapshot.name, breakword: false }, { name: "snapshot-destroy", id: snapshot.id, timeout: 4 });
 
@@ -9617,7 +9617,7 @@ function FnSnapshotRename(pool = { name, id }, snapshot = { name, id, namenew, r
 
     $("#spinner-storagepool-snapshot-rename-" + snapshot.id + " span").text("Renaming snapshot...");
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Snapshot successfully renamed", description: snapshot.name, breakword: false }, { name: "snapshot-rename", id: snapshot.id, timeout: 4 });
 
@@ -9838,7 +9838,7 @@ function FnSnapshotRollBackCommand(pool = { name, id }, snapshot = { name, id, f
     FnConsole.log[1]("Snapshots, Roll Back: In Progress, Pool: " + pool.name + ", Snapshot: " + snapshot.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Snapshot successfully rolled back", description: snapshot.name, breakword: false }, { name: "snapshot-rollback", id: snapshot.id, timeout: 4 });
 
@@ -11302,7 +11302,7 @@ function FnDisksBlkidGet() {
     FnConsole.log[2]("Disks, Blkid, Get: In Progress");
     FnConsole.log[2](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Blkid, Get: Success");
         })
@@ -11319,7 +11319,7 @@ function FnDisksIdentifierDiskGet() {
     FnConsole.log[2]("Disks, Identifier, Disk / WWN, Get: In Progress");
     FnConsole.log[2](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Identifier, Disk / WWN, Get: Success");
         })
@@ -11336,7 +11336,7 @@ function FnDisksIdentifierHardwarePathGet() {
     FnConsole.log[2]("Disks, Identifier, Hardware Path, Get: In Progress");
     FnConsole.log[2](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Identifier, Hardware Path, Get: Success");
         })
@@ -11353,7 +11353,7 @@ function FnDisksIdentifierVirtualDeviceMappingGet() {
     FnConsole.log[2]("Disks, Identifier, Virtual Device Mapping, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Identifier, Virtual Device Mapping, Get: Success");
         })
@@ -11421,7 +11421,7 @@ function FnDisksStoragePoolsImportableGet() {
     FnConsole.log[2]("Disks, Importable Storage Pools, Get: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[2]("Disks, Importable Storage Pools, Get: Success");
         })
@@ -11444,7 +11444,7 @@ function FnSambaConfigurationReload() {
     FnConsole.log[2]("Samba, Configuration, Reload: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, Configuration, Reload: Success");
         })
@@ -11519,7 +11519,7 @@ function FnSambaRestart() {
     FnConsole.log[2]("Samba, Restart: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, Restart: Success");
         })
@@ -12926,7 +12926,7 @@ function FnSambaZfsShareConfigureCommand(pool = { name, id }, filesystem = { nam
     FnConsole.log[2]("Samba, ZFS Share Configuration, Update: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnDisplayAlert({ status: "success", title: "Samba share configuration successfully updated", description: filesystem.name, breakword: false }, { name: "samba-configure-share", id: filesystem.id, timeout: 4 });
 
@@ -12960,7 +12960,7 @@ function FnSambaZfsShareDisable(pool = { name, id, altroot: false, readonly: fal
     FnConsole.log[2]("Samba, Share, Disable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, Share, Disable: Success, Pool: " + pool.name + ", File System: " + filesystem.name);
         })
@@ -12977,7 +12977,7 @@ function FnSambaZfsShareEnable(pool = { name, id }, filesystem = { name, id, mou
     FnConsole.log[2]("Samba, Share, Enable: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, Share, Enable: Success, Pool: " + pool.name + ", File System: " + filesystem.name);
         })
@@ -12994,7 +12994,7 @@ function FnSambaZfsSharesConfigurationReload() {
     FnConsole.log[2]("Samba, ZFS Shares Configuration, Reload: In Progress");
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
 
-    return cockpit.spawn(process.command, { err: "out" })
+    return cockpit.spawn(process.command, { err: "out", superuser: "require" })
         .done(function () {
             FnConsole.log[1]("Samba, ZFS Shares Configuration, Reload: Success");
         })
