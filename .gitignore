@@ -1,0 +1,9 @@
+# deb packaging
+debian/cockpit-zfs-manager
+debian/cockpit-zfs-manager.substvars
+debian/debhelper-build-stamp
+debian/files
+debian/.debhelper
+
+# docker builds
+dist
