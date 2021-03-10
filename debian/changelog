@@ -1,3 +1,10 @@
+cockpit-zfs-manager (1.2.3focal-3) focal; urgency=medium
+
+  * Fixed bug where non-root sudo users caused unstability
+  * Added debian and rpm build scripts 
+
+ -- bkelly <bkelly@45drives.com>  Wed, 10 mar 2021 13:05:56 +0000
+
 cockpit-zfs-manager (1.1focal-3) focal; urgency=medium
 
   * Changed depends to cockpit-bridge

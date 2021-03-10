@@ -74,7 +74,7 @@ let zfsmanager = {
         name: ""
     },
     version: "0.3.4.514",
-    vendorversion: "1.2",
+    vendorversion: "1.2.3",
     zfs: {
         storagepool: {
             boot: "",
@@ -7783,9 +7783,9 @@ function FnFileSystemCreate(pool = { name, id, altroot: false }, filesystem = { 
             filesystem.passphrase = filesystem.passphrase.replace(/\'/g, "\'\"\'\"\'");
         }
 
-        process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | pkexec /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
+        process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
     } else {
-        process.command = ["/bin/sh", "-c", "pkexec /sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
+        process.command = ["/bin/sh", "-c", "/sbin/zfs create " + process.options + ` "` + filesystem.name + `"`];
     }
 
     FnConsole.log[1]("File Systems, Create: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
@@ -8590,7 +8590,7 @@ function FnFileSystemUnlock(pool = { name, id, altroot: false, readonly: false }
         filesystem.passphrase = filesystem.passphrase.replace(/\'/g, "\'\"\'\"\'");
     }
 
-    process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | pkexec /sbin/zfs load-key \"" + filesystem.name + "\""];
+    process.command = ["/bin/sh", "-c", "printf '" + filesystem.passphrase + "' | /sbin/zfs load-key \"" + filesystem.name + "\""];
 
     FnConsole.log[2]("File Systems, Unlock: In Progress, Pool: " + pool.name + ", File System: " + filesystem.name);
     FnConsole.log[3](FnConsoleCommand({ command: process.command }));
