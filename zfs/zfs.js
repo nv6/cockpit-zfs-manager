@@ -1383,6 +1383,7 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
 											        <th>Deduplication</th>
 											        <th>Share</th>
 											        <th>Mounted</th>
+                                                    <th>Replication</th>
 											        <th class="listing-ct-icon"></th>
 											        <th class="listing-ct-icon"></th>
 											        <th class="listing-ct-actionsmenu"></th>
@@ -4283,6 +4284,14 @@ function FnStoragePoolRefreshCommand(pool = { name, id }) {
                 $("#span-storagepool-upgrade-" + pool.id).addClass("hidden");
             }
 
+            let $rtEl = $(`modals-replication-tasks-` + pool.id);
+
+            if ($rtEl.length < 1) {
+                $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
+            } else {
+                $rtEl.empty();
+            }
+            
             $("#div-storagepool-health-" + pool.id).empty().html(`<span class="` + pool.healthicon + `"></span> ` + pool.health);
             $("#div-storagepool-size-" + pool.id).text(pool.size);
             $("#div-storagepool-allocated-" + pool.id).text(pool.allocated);
@@ -4945,8 +4954,9 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
     $("#modals-storagepool-filesystem-" + pool.id).remove();
     $("#modals").append(`<div id="modals-storagepool-filesystems-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-storagepool-filesystem-` + pool.id + `"></div>`);
+    $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
 
-    filesystems.forEach((_value, _index) => {
+    filesystems.forEach(async (_value, _index) => {
         let filesystem = {
             properties: _value.split(/\t/g).filter(v => v),
             clone: false,
@@ -4974,6 +4984,24 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 }
             }
         };
+
+        let existingReplicationTask = null;
+
+        try {
+            let command = ['znapzendzetup', 'list', filesystem.properties[1]];
+
+            let content = await cockpit.spawn(command, { err: "out", superuser: "require" });
+
+            if (content.includes('cannot list backup config')) {
+                existingReplicationTask = false;
+            } else {
+                existingReplicationTask = true;
+            }
+        } catch (error) {
+            console.log('error', error);
+        }
+
+        filesystem.properties.splice(13, 0, typeof existingReplicationTask !== 'boolean' ? 'Error' : existingReplicationTask ? 'Yes' : 'No');
 
         filesystem.output = `<tr>`;
 
@@ -5105,7 +5133,21 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     filesystem.output += `<td><span class="table-ct-head">Mounted:</span>` + __value + `</td>`;
 
                     break;
-                case 13: //13=origin
+                case 13: //13=replication task
+                    if (__value.toLowerCase() == "yes") {
+                        filesystem.replicationtask = true;
+                    } else {
+                        filesystem.replicationtask = false;
+                    }
+
+                    if (/yes|no/gi.test(__value)) {
+                        __value = __value.charAt(0).toUpperCase() + __value.slice(1);
+                    }
+
+                    filesystem.output += `<td><span class="table-ct-head">Replicated:</span>` + __value + `</td>`;
+
+                    break;
+                case 14: //14=origin
                     if (__value != "-") {
                         filesystem.origin = __value;
                         filesystem.clone = true;
@@ -5116,7 +5158,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     }
 
                     break;
-                case 14: //14=encryption
+                case 15: //15=encryption
                     if (__value.toLowerCase() != "off") {
                         filesystem.encryption = true;
                     } else {
@@ -5124,17 +5166,17 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     }
 
                     break;
-                case 15: //15=encryptionroot
+                case 16: //16=encryptionroot
                     filesystem.encryptionroot = __value;
 
                     break;
-                case 16: //16=keyformat
+                case 17: //17=keyformat
                     if (filesystem.encryption && __value.toLowerCase() == "passphrase") {
                         filesystem.keyformat = "passphrase";
                     }
 
                     break;
-                case 17: //17=keystatus
+                case 18: //18=keystatus
                     if (__value != "-") {
                         filesystem.keystatus = __value;
                     } else {
@@ -5181,8 +5223,14 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     },
                     itemencrypted: [],
                     itemencrypteddivider: function () {
-                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && (this.itemsamba.length > 0 || this.itemsnapshot.length > 0)) {
+                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && (this.itemsamba.length > 0 || this.itemsnapshot.length > 0 || this.itemreplication.length > 0)) {
                             this.itemencrypted.push(this.divider);
+                        }
+                    },
+                    itemreplication: [],
+                    itemreplicationdivider: function () {
+                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && (this.itemsamba.length > 0 || this.itemsnapshot.length > 0)) {
+                            this.itemreplication.push(this.divider);
                         }
                     },
                     itemsamba: [],
@@ -5199,9 +5247,10 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                         this.items.itemconfiguredivider();
                         this.items.itemdivider();
                         this.items.itemencrypteddivider();
+                        this.items.itemreplicationdivider();
                         this.items.itemsambadivider();
 
-                        return this.header + this.items.itemconfigure.join("\n") + this.items.item.join("\n") + this.items.itemencrypted.join("\n") + this.items.itemsamba.join("\n") + this.items.itemsnapshot.join("\n") + this.footer;
+                        return this.header + this.items.itemconfigure.join("\n") + this.items.item.join("\n") + this.items.itemencrypted.join("\n") + this.items.itemreplication.join("\n") + this.items.itemsamba.join("\n") + this.items.itemsnapshot.join("\n") + this.footer;
                     } else {
                         return "";
                     }
@@ -5275,6 +5324,15 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                     }
                 }
 
+                //Configure Replication Task
+                if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.name != pool.name) {
+                    if (!filesystem.clone || filesystem.clone && new RegExp("^" + filesystem.name + "/").test(filesystem.origin.replace(/^(.*)\@.*$/, "$1")) == false) { //Do not display if clone origin is a child file system - will generate recursive dependency error
+                        filesystem.actionsmenu.items.itemreplication.push(`<li><a id="btn-storagepool-replication-task-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-replication-task-configure-` + filesystem.id + `" tabIndex="-1">Configure Replication Task</a></li>`);
+
+                        filesystem.actionsmenu.register.task_replication = true;
+                    }
+                }
+
                 //Enable Samba Share
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && !filesystem.sharesmb && zfsmanager.configuration.samba.manage) {
                     filesystem.actionsmenu.items.itemsamba.push(`<li><a id="btn-storagepool-filesystem-samba-enable-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-enable-` + filesystem.id + `" tabIndex="-1">Enable Samba Share</a></li>`);
@@ -5330,6 +5388,9 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
         }
         if (filesystem.actionsmenu.register.rename) {
             FnModalFileSystemRename({ name: pool.name, id: pool.id, altroot: pool.altroot }, { name: filesystem.name, id: filesystem.id, clone: filesystem.clone, encryption: filesystem.encryption, encryptionroot: filesystem.encryptionroot, origin: filesystem.origin, sharesmb: filesystem.sharesmb, type: filesystem.type });
+        }
+        if (filesystem.actionsmenu.register.task_replication) {
+            FnModalReplicationTaskCreate(pool, filesystem);
         }
         if (filesystem.actionsmenu.register.samba.configure) {
             FnModalFileSystemSambaConfigure({ name: pool.name, id: pool.id, altroot: pool.altroot, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, mountpoint: filesystem.mountpoint });
@@ -15311,7 +15372,7 @@ function FnModalFileSystemsCreate(pool = { name, id, altroot: false, feature: { 
     $("#modals-storagepool-filesystems-" + pool.id).append(modal.window);
 }
 
-function FnModalFileSystemsCreateContent(pool = { name, id, altroot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true } }, modal = { id }) {
+function FnModalFileSystemsCreateContent(pool = { name, id: '', altroot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true } }, modal = { id }) {
     modal.content = `
         <div class="modal-dialog">
             <div class="modal-content">
@@ -20904,4 +20965,555 @@ function FnModalStatusVirtualDeviceRemoveContent(pool = { name, id, status: { co
 
     modal.id.empty().append(modal.content);
 }
+//#endregion
+
+//#region Modal Replication Task
+
+function znapzendUnitForReload(x) {
+    if (x.match(/second/gi)) return 'Second';
+    if (x.match(/minute/gi)) return 'Minute';
+    if (x.match(/hour/gi)) return 'Hour';
+    if (x.match(/day/gi)) return 'Day';
+    if (x.match(/week/gi)) return 'Week';
+    if (x.match(/month/gi)) return 'Month';
+    if (x.match(/year/gi)) return 'Year';
+}
+
+function znapzendSplitNumberCharacter(x) {
+    if (!x) return [];
+    let number = Number(x.match(/[0-9]/g)?.join(''));
+    let string = x.replace(/[0-9]/g, '');
+
+    return [number, string];
+}
+
+function znapzendSplitPlan(x) {
+    const [retention, interval] = x.split('=>');
+    let retValue = Number(retention.match(/[0-9]/g)?.join(''));
+    let retUnit = znapzendUnitForReload(retention);
+    let intValue = Number(interval.match(/[0-9]/g)?.join(''));
+    let intUnit = znapzendUnitForReload(interval);
+
+    return {
+        ret: retValue,
+        retUnit,
+        int: intValue,
+        intUnit,
+    };
+}
+
+function znapzendParseDestination(x) {
+    let obj = { external: false, user: '', host: '', dataset: x, };
+
+    if (!x) return {};
+    if (!x.match(/[@:]/g)) return obj;
+
+    obj.external = true;
+    obj.user = x.split('@')[0];
+    obj.host = x.split('@')[1].split(':')[0];
+    obj.dataset = x.split(':')[1];
+
+    return obj;
+}
+
+// function FnModalReplicationTaskCreate(pool = { name, id, altroot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true } }) {
+function FnModalReplicationTaskCreate(pool, filesystem) {
+    let modal = {
+        window: ""
+    };
+
+    let $el = $(`#modal-storagepool-replication-task-configure-` + filesystem.id);
+
+    if ($el.length > 0) {
+        $el.remove();
+    }
+
+    modal.window = `
+        <div id="modal-storagepool-replication-task-configure-` + filesystem.id + `" aria-hidden="true" class="modal fade" data-backdrop="static" role="dialog" tabindex="-1"></div>
+
+        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+			$("#btn-storagepool-replication-task-configure-` + filesystem.id + `").on("click", function () {
+                FnModalReplicationTaskCreateContent({id: '${pool.id}', name: '${pool.name}'}, {id: '${filesystem.id}', name: '${filesystem.name}', replicationtask: ${filesystem.replicationtask}}, { id: $("#modal-storagepool-replication-task-configure-` + filesystem.id + `"), tag: "#modal-storagepool-replication-task-configure-` + filesystem.id + `" });
+			});
+        </script>
+    `;
+
+    $("#modals-replication-tasks-" + pool.id).append(modal.window);
+}
+
+async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
+    let repTask = false;
+    let useDst;
+    let dstPlans;
+    let dstScript;
+    let srcPlans;
+    let srcScript = `AddSrcPlan('#src-storagepool-replication-task-${filesystem.id}');`;
+    let recursive;
+    let mBufferSize;
+    let destination;
+
+    if (filesystem.replicationtask) {
+        try {
+            repTask = true;
+
+            let command = ['znapzendzetup', 'list', filesystem.name];
+
+            let content = await cockpit.spawn(command, { err: "out", superuser: "require" });
+            let lines = content.split('\n');
+            let data = {};
+
+            for (let index = 0; index < lines.length; index++) {
+                const element = lines[index].trim();
+
+                if (element.includes(' = ')) {
+                    let parts = element.split(' = ');
+                    data[parts[0]] = parts[1];
+                }
+            }
+
+            useDst = !!data?.dst_a;
+            dstPlans = data?.dst_a_plan?.split(',').map(plan => znapzendSplitPlan(plan));
+            dstScript = '';
+            if (dstPlans) dstScript = dstPlans.map(plan => `AddDstPlan("#dst-storagepool-replication-task-` + filesystem.id + `", JSON.parse('${JSON.stringify(plan)}'));`).join('');
+            srcPlans = data?.src_plan.split(',').map(plan => znapzendSplitPlan(plan));
+            srcScript = srcPlans.map(plan => `AddSrcPlan("#src-storagepool-replication-task-` + filesystem.id + `", JSON.parse('${JSON.stringify(plan)}'));`).join('');
+            recursive = data?.recursive === 'on';
+            mBufferSize = znapzendSplitNumberCharacter(data?.mbuffer_size);
+            destination = znapzendParseDestination(data?.dst_a);
+        } catch (error) {
+            FnDisplayAlert({ status: "danger", title: "Replication task could not be configured", description: '${filesystem.name}', breakword: false }, { name: "replicationtask-configure" });   
+        }
+    }
+
+    modal.content = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Configure Replication Task</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="ct-form">
+                        <!-- Modal Content -->
+                        <label class="control-label">Recursive</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
+                            <input id="input-storagepool-replication-task-recursive-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox"${repTask && recursive ? ' checked' : ''}>
+                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
+                        </div>
+                        <label class="control-label">Destination</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
+                            <input id="input-storagepool-replication-task-use-destination-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox" ${repTask && useDst ? ' checked' : ''}>
+                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
+                        </div>
+                        <label class="control-label">mBuffer Size</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-replication-task-mbuffersize-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${repTask && mBufferSize.length === 2 ? mBufferSize[0] : '1'}">
+                            <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+                        <label class="control-label">mBuffer Unit</label>
+                        <div class="ct-validation-wrapper">
+                            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                                    <span id="btnspan-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `" class="pull-left" data-field-value="${repTask && mBufferSize.length === 2 ? mBufferSize[1] : 'G'}">${repTask && mBufferSize.length === 2 ? mBufferSize[1] : 'G'}</span>
+                                    <div class="caret"></div>
+                                </button>
+                                <ul id="dropdown-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `" class="dropdown-menu">
+                                    <li value="b"><a tabindex="-1">b</a></li>
+                                    <li value="k"><a tabindex="-1">k</a></li>
+                                    <li value="M"><a tabindex="-1">M</a></li>
+                                    <li value="G"><a tabindex="-1">G</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <h5 class="modal-title">Source Plans <a href="#" id="storagepool-replication-task-add-src-` + filesystem.id + `">&plus;</a></h5>
+                        <div id="src-storagepool-replication-task-` + filesystem.id + `"></div>
+                        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">${srcScript}</script>
+                    </div>
+                    <div class="mt-2" id="storagepool-replication-task-dst-plans-` + filesystem.id + `">
+                        <h5 class="modal-title">Destination Plans <a href="#" id="storagepool-replication-task-add-dst-` + filesystem.id + `">&plus;</a></h5>
+                        <div id="dst-storagepool-replication-task-` + filesystem.id + `"></div>
+                        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">${repTask && useDst ? dstScript : ''}</script>
+                    </div>
+                    <div class="ct-form" id="storagepool-replication-task-dst-inputs-` + filesystem.id + `">
+                        <label class="control-label">External Destination</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
+                            <input id="input-storagepool-replication-task-external-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox"${repTask && destination.external ? ' checked' : ''}>
+                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
+                        </div>
+                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">User</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper external-storagepool-replication-task-item-` + filesystem.id + `">
+                            <input id="input-storagepool-replication-task-user-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.user ? destination.user : ''}">
+                            <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">Host</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper external-storagepool-replication-task-item-` + filesystem.id + `">
+                            <input id="input-storagepool-replication-task-host-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.host ? destination.host : ''}">
+                            <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+                        <label class="control-label">Destination Dataset</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-replication-task-dst-dataset-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.dataset ? destination.dataset : ''}">
+                            <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div></div>
+                    <!-- Form Buttons -->
+                    <div class="modal-ct-buttons">
+                        <button class="btn btn-default cancel" data-dismiss="modal" tabindex="-1">Cancel</button>
+                        ${filesystem.replicationtask ? `<button id="btn-storagepool-replication-task-delete-${filesystem.id}" class="btn btn-danger apply privileged-modal" tabindex="-1">Delete</button>` : ''}
+                        <button id="btn-storagepool-replication-task-configure-run-` + filesystem.id + `" class="btn btn-primary apply privileged-modal" tabindex="-1">Configure</button>
+                    </div>
+                </div>
+            </div>
+
+            <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+                ${repTask && destination.external ? '' : `$(".external-storagepool-replication-task-item-${filesystem.id}").css('display', 'none');`}
+                ${repTask && destination.external ? '' : `$("#storagepool-replication-task-dst-plans-${filesystem.id}").css('display', 'none');`}
+                ${repTask && destination.external ? '' : `$("#storagepool-replication-task-dst-inputs-${filesystem.id}").css('display', 'none');`}
+
+                $("#dropdown-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `").on("click", "li a", function () {
+                    $("#btnspan-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                    $(this).parent().siblings().removeClass("active");
+                    $(this).parent().addClass("active");
+                });
+
+                $("#input-storagepool-replication-task-external-${filesystem.id}").on("input", () => {
+                    let e = $("#input-storagepool-replication-task-external-${filesystem.id}");
+                    let checked = e.get(0).checked;
+                   
+                    $(".external-storagepool-replication-task-item-` + filesystem.id + `").css('display', checked ? 'grid' : 'none');
+                });
+
+                $("#input-storagepool-replication-task-use-destination-` + filesystem.id + `").on("input", () => {
+                    let e = $("#input-storagepool-replication-task-use-destination-` + filesystem.id + `");
+                    let checked = e.get(0).checked;
+
+                    $("#storagepool-replication-task-dst-plans-` + filesystem.id + `").css('display', checked ? 'block' : 'none');
+                    $("#storagepool-replication-task-dst-inputs-` + filesystem.id + `").css('display', checked ? 'grid' : 'none');
+
+                    if (checked) {
+                        AddDstPlan("#dst-storagepool-replication-task-` + filesystem.id + `");
+                    } else {
+                        $("#dst-storagepool-replication-task-` + filesystem.id + `").empty();
+                    }
+                });
+
+                $("#storagepool-replication-task-add-src-` + filesystem.id + `").on("click", () => {
+                    AddSrcPlan("#src-storagepool-replication-task-` + filesystem.id + `");
+                });
+
+                $("#storagepool-replication-task-add-dst-` + filesystem.id + `").on("click", () => {
+                    AddDstPlan("#dst-storagepool-replication-task-` + filesystem.id + `");
+                });
+
+                function changeUnit(x) {
+                    if (x.match(/second/gi)) return 's';
+                    if (x.match(/minute/gi)) return 'min';
+                    if (x.match(/hour/gi)) return 'h';
+                    if (x.match(/day/gi)) return 'd';
+                    if (x.match(/week/gi)) return 'w';
+                    if (x.match(/month/gi)) return 'm';
+                    if (x.match(/year/gi)) return 'y';
+                }
+
+                $("#btn-storagepool-replication-task-configure-run-${filesystem.id}").on("click", () => {
+                    let recursive = $("#input-storagepool-replication-task-recursive-` + filesystem.id + `").get(0).checked;
+                    let useDestination = $("#input-storagepool-replication-task-use-destination-` + filesystem.id + `").get(0).checked;
+                    
+                    let mBufferSizeValue = $("#input-storagepool-replication-task-mbuffersize-${filesystem.id}").val();
+                    let mBufferSizeUnit = $("#btnspan-storagepool-replication-task-mbuffersize-unit-${filesystem.id}").attr("data-field-value");
+                    
+                    let srcPlanElements = $('#src-storagepool-replication-task-${filesystem.id} > [data-type="src"]');
+                    
+                    let dstPlanElements = $('#dst-storagepool-replication-task-${filesystem.id} > [data-type="dst"]');
+                    let externalUser = $("#input-storagepool-replication-task-user-${filesystem.id}").val();
+                    let externalHost = $("#input-storagepool-replication-task-host-${filesystem.id}").val();
+                    let dstDataset = $("#input-storagepool-replication-task-dst-dataset-${filesystem.id}").val();
+                    
+                    let srcDataset = '${filesystem.name}';
+
+                    let external = $("#input-storagepool-replication-task-external-${filesystem.id}").get(0).checked;
+
+                    let mBufferSize = mBufferSizeValue + mBufferSizeUnit;
+                    let srcPlans = [];
+                    let dstPlans = [];
+
+                    let dstLocation = [];
+
+                    if (external) {
+                        dstLocation.push(externalUser);
+                        dstLocation.push('@');
+                        dstLocation.push(externalHost);
+                        dstLocation.push(':');
+                    }
+
+                    dstLocation.push(dstDataset);
+
+                    dstLocation = dstLocation.join('');
+
+                    srcPlanElements.each((i, el) => {
+                        let id = el.dataset.id;
+                        let retValue = $('#input-storagepool-replication-task-src-ret-' + id).val();
+                        let retUnit = changeUnit($('#btnspan-storagepool-replication-task-src-ret-unit-' + id).attr("data-field-value"));
+                        let intValue = $('#input-storagepool-replication-task-src-int-' + id).val();
+                        let intUnit = changeUnit($('#btnspan-storagepool-replication-task-src-int-unit-' + id).attr("data-field-value"));
+
+                        srcPlans.push({
+                            ret: retValue + retUnit,
+                            int: intValue + intUnit,
+                        });
+                    });
+
+                    dstPlanElements.each((i, el) => {
+                        let id = el.dataset.id;
+                        let retValue = $('#input-storagepool-replication-task-dst-ret-' + id).val();
+                        let retUnit = changeUnit($('#btnspan-storagepool-replication-task-dst-ret-unit-' + id).attr("data-field-value"));
+                        let intValue = $('#input-storagepool-replication-task-dst-int-' + id).val();
+                        let intUnit = changeUnit($('#btnspan-storagepool-replication-task-dst-int-unit-' + id).attr("data-field-value"));
+
+                        dstPlans.push({
+                            ret: retValue + retUnit,
+                            int: intValue + intUnit,
+                        });
+                    });
+
+                    let srcPlan = srcPlans.map(i => \`\${i.ret}=>\${i.int}\`).join(',');
+                    let dstPlan = dstPlans.map(i => \`\${i.ret}=>\${i.int}\`).join(',');
+
+                    let command = [
+                        'znapzendzetup',
+                        'create',
+                        recursive ? '--recursive' : null,
+                        '--donotask',
+                        '--mbuffer=/usr/bin/mbuffer',
+                        \`--mbuffersize=\${mBufferSize}\`,
+                        'SRC',
+                        \`\${srcPlan}\`,
+                        srcDataset,
+                    ].filter(x => x !== null);
+
+                    if (useDestination) {
+                        command.push('DST:a');
+                        command.push(\`\${dstPlan}\`);
+                        command.push(dstLocation);
+                    }
+
+                    let process = cockpit.spawn(command, { err: "out", superuser: "require" });
+
+                    process.then(data => {
+                        console.log('done', data);
+                        FnReplicationTaskCreate({ name: '${filesystem.name}' }, { name: '${pool.name}', id: '${pool.id}' }, { tag: '${modal.tag}' });
+                    });
+
+                    process.catch(error => {
+                        FnDisplayAlert({ status: "danger", title: "Replication task could not be configured", description: '${filesystem.name}', breakword: false }, { name: "replicationtask-configure" });
+                    });
+
+                    // process.finally(() => {
+                    //     $("#modals-replication-task-` + filesystem.id + `").remove();
+                    // });
+                });
+
+                $("#btn-storagepool-replication-task-delete-${filesystem.id}").on("click", () => {
+                    let command = ['znapzendzetup', 'delete', '${filesystem.name}'];
+
+                    let process = cockpit.spawn(command, { err: "out", superuser: "require" });
+
+                    process.then(data => {
+                        console.log('done', data);
+                        FnReplicationTaskDelete({ name: '${filesystem.name}' }, { name: '${pool.name}', id: '${pool.id}' }, { tag: '${modal.tag}' });
+                    });
+
+                    process.catch(error => {
+                        FnDisplayAlert({ status: "danger", title: "Replication task could not be deleted", description: '${filesystem.name}', breakword: false }, { name: "replicationtask-delete" });
+                    });
+
+                    // process.finally(() => {
+                    //     $("#modals-replication-task-` + filesystem.id + `").remove();
+                    // });
+                });
+            </script>
+        </div>
+    `;
+
+    // modal.id.empty();
+
+    if ($(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).length > 1) {
+        console.log('here');
+        $(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).get(0).remove();
+    }
+
+    // console.log($(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).length);
+
+    modal.id.empty().append(modal.content);
+
+    // modal.id.html(modal.content);
+}
+
+function FnReplicationTaskCreate(filesystem, pool, modal) {
+    FnDisplayAlert({ status: "success", title: "Replication task configured", description: filesystem.name, breakword: false }, { name: "replicationtask-configure" });
+
+    setTimeout(() => {
+        $(modal.tag).modal('hide');
+
+        setTimeout(() => {
+            FnStoragePoolRefresh({ name: pool.name, id: pool.id }, { storagepool: true, filesystems: true, snapshots: true, status: false });
+        }, 200);
+    }, 700);
+}
+
+function FnReplicationTaskDelete(filesystem, pool, modal) {
+    FnDisplayAlert({ status: "success", title: "Replication task deleted", description: filesystem.name, breakword: false }, { name: "replicationtask-delete" });
+
+    setTimeout(() => {
+        $(modal.tag).modal('hide');
+
+        setTimeout(() => {
+            FnStoragePoolRefresh({ name: pool.name, id: pool.id }, { storagepool: true, filesystems: true, snapshots: true, status: false });
+        }, 200);
+    }, 700);
+}
+
+function AddSrcPlan(element, data = { ret: '1', retUnit: 'Second', int: '1', intUnit: 'Second', }) {
+    let id = Math.floor(Math.random() * 1000);
+
+    $(element).append(`
+    <div class="ct-form plan-wrapper" data-type="src" data-id="${id}">
+        <label class="control-label">Retention Time</label>
+        <div id="validationwrapper-storagepool-replication-task-src-ret-${id}" class="ct-validation-wrapper">
+            <input id="input-storagepool-replication-task-src-ret-${id}" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${data.ret}">
+            <span id="helpblock-storagepool-replication-task-src-ret-${id}" class="help-block"></span>
+        </div>
+        <label class="control-label">Retention Time Unit</label>
+        <div class="ct-validation-wrapper">
+            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                    <span id="btnspan-storagepool-replication-task-src-ret-unit-${id}" class="pull-left" data-field-value="${data.retUnit.toLowerCase()}">${data.retUnit}</span>
+                    <div class="caret"></div>
+                </button>
+                <ul id="dropdown-storagepool-replication-task-src-ret-unit-${id}" class="dropdown-menu">
+                    <li value="second"><a tabindex="-1">Second</a></li>
+                    <li value="minute"><a tabindex="-1">Minute</a></li>
+                    <li value="hour"><a tabindex="-1">Hour</a></li>
+                    <li value="day"><a tabindex="-1">Day</a></li>
+                    <li value="week"><a tabindex="-1">Week</a></li>
+                    <li value="month"><a tabindex="-1">Month</a></li>
+                    <li value="year"><a tabindex="-1">Year</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <label class="control-label">Interval Time</label>
+        <div id="validationwrapper-storagepool-replication-task-src-int-${id}" class="ct-validation-wrapper">
+            <input id="input-storagepool-replication-task-src-int-${id}" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${data.int}">
+            <span id="helpblock-storagepool-replication-task-src-int-${id}" class="help-block"></span>
+        </div>
+        <label class="control-label">Interval Time Unit</label>
+        <div class="ct-validation-wrapper">
+            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                    <span id="btnspan-storagepool-replication-task-src-int-unit-${id}" class="pull-left" data-field-value="${data.intUnit.toLowerCase()}">${data.intUnit}</span>
+                    <div class="caret"></div>
+                </button>
+                <ul id="dropdown-storagepool-replication-task-src-int-unit-${id}" class="dropdown-menu">
+                    <li value="second"><a tabindex="-1">Second</a></li>
+                    <li value="minute"><a tabindex="-1">Minute</a></li>
+                    <li value="hour"><a tabindex="-1">Hour</a></li>
+                    <li value="day"><a tabindex="-1">Day</a></li>
+                    <li value="week"><a tabindex="-1">Week</a></li>
+                    <li value="month"><a tabindex="-1">Month</a></li>
+                    <li value="year"><a tabindex="-1">Year</a></li>
+                </ul>
+            </div>
+        </div>
+        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+            $("#dropdown-storagepool-replication-task-src-ret-unit-${id}").on("click", "li a", function () {
+                $("#btnspan-storagepool-replication-task-src-ret-unit-${id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                $(this).parent().siblings().removeClass("active");
+                $(this).parent().addClass("active");
+            });
+
+            $("#dropdown-storagepool-replication-task-src-int-unit-${id}").on("click", "li a", function () {
+                $("#btnspan-storagepool-replication-task-src-int-unit-${id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                $(this).parent().siblings().removeClass("active");
+                $(this).parent().addClass("active");
+            });
+        </script>
+    </div>
+`);
+}
+
+function AddDstPlan(element, data = { ret: '1', retUnit: 'Second', int: '1', intUnit: 'Second', }) {
+    let id = Math.floor(Math.random() * 1000);
+
+    $(element).append(`
+    <div class="ct-form plan-wrapper" data-type="dst" data-id="${id}">
+        <label class="control-label">Retention Time</label>
+        <div id="validationwrapper-storagepool-replication-task-dst-ret-${id}" class="ct-validation-wrapper">
+            <input id="input-storagepool-replication-task-dst-ret-${id}" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${data.ret}">
+            <span id="helpblock-storagepool-replication-task-dst-ret-${id}" class="help-block"></span>
+        </div>
+        <label class="control-label">Retention Time Unit</label>
+        <div class="ct-validation-wrapper">
+            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                    <span id="btnspan-storagepool-replication-task-dst-ret-unit-${id}" class="pull-left" data-field-value="${data.retUnit.toLowerCase()}">${data.retUnit}</span>
+                    <div class="caret"></div>
+                </button>
+                <ul id="dropdown-storagepool-replication-task-dst-ret-unit-${id}" class="dropdown-menu">
+                <li value="second"><a tabindex="-1">Second</a></li>
+                <li value="minute"><a tabindex="-1">Minute</a></li>
+                <li value="hour"><a tabindex="-1">Hour</a></li>
+                <li value="day"><a tabindex="-1">Day</a></li>
+                <li value="week"><a tabindex="-1">Week</a></li>
+                <li value="month"><a tabindex="-1">Month</a></li>
+                <li value="year"><a tabindex="-1">Year</a></li>
+            </ul>
+            </div>
+        </div>
+
+        <label class="control-label">Interval Time</label>
+        <div id="validationwrapper-storagepool-replication-task-dst-int-${id}" class="ct-validation-wrapper">
+            <input id="input-storagepool-replication-task-dst-int-${id}" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${data.int}">
+            <span id="helpblock-storagepool-replication-task-dst-int-${id}" class="help-block"></span>
+        </div>
+        <label class="control-label">Interval Time Unit</label>
+        <div class="ct-validation-wrapper">
+            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                    <span id="btnspan-storagepool-replication-task-dst-int-unit-${id}" class="pull-left" data-field-value="${data.intUnit.toLowerCase()}">${data.intUnit}</span>
+                    <div class="caret"></div>
+                </button>
+                <ul id="dropdown-storagepool-replication-task-dst-int-unit-${id}" class="dropdown-menu">
+                    <li value="second"><a tabindex="-1">Second</a></li>
+                    <li value="minute"><a tabindex="-1">Minute</a></li>
+                    <li value="hour"><a tabindex="-1">Hour</a></li>
+                    <li value="day"><a tabindex="-1">Day</a></li>
+                    <li value="week"><a tabindex="-1">Week</a></li>
+                    <li value="month"><a tabindex="-1">Month</a></li>
+                    <li value="year"><a tabindex="-1">Year</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+            $("#dropdown-storagepool-replication-task-dst-ret-unit-${id}").on("click", "li a", function () {
+                $("#btnspan-storagepool-replication-task-dst-ret-unit-${id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                $(this).parent().siblings().removeClass("active");
+                $(this).parent().addClass("active");
+            });
+
+            $("#dropdown-storagepool-replication-task-dst-int-unit-${id}").on("click", "li a", function () {
+                $("#btnspan-storagepool-replication-task-dst-int-unit-${id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                $(this).parent().siblings().removeClass("active");
+                $(this).parent().addClass("active");
+            });
+        </script>
+    </div>
+`);
+}
+
 //#endregion
