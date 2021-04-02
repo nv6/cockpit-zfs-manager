@@ -21016,7 +21016,6 @@ function znapzendParseDestination(x) {
     return obj;
 }
 
-// function FnModalReplicationTaskCreate(pool = { name, id, altroot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true } }) {
 function FnModalReplicationTaskCreate(pool, filesystem) {
     let modal = {
         window: ""
@@ -21093,7 +21092,6 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
                 </div>
                 <div class="modal-body">
                     <div class="ct-form">
-                        <!-- Modal Content -->
                         <label class="control-label">Recursive</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-recursive-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox"${repTask && recursive ? ' checked' : ''}>
@@ -21160,7 +21158,9 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
                 </div>
                 <div class="modal-footer">
                     <div></div>
-                    <!-- Form Buttons -->
+                    <div id="spinner-storagepool-replication-task-configure-` + filesystem.id + `" class="dialog-wait-ct pull-left hidden">
+                        <div class="spinner spinner-sm"></div><span></span>
+                    </div>
                     <div class="modal-ct-buttons">
                         <button class="btn btn-default cancel" data-dismiss="modal" tabindex="-1">Cancel</button>
                         ${filesystem.replicationtask ? `<button id="btn-storagepool-replication-task-delete-${filesystem.id}" class="btn btn-danger apply privileged-modal" tabindex="-1">Delete</button>` : ''}
@@ -21171,8 +21171,8 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
 
             <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
                 ${repTask && destination.external ? '' : `$(".external-storagepool-replication-task-item-${filesystem.id}").css('display', 'none');`}
-                ${repTask && destination.external ? '' : `$("#storagepool-replication-task-dst-plans-${filesystem.id}").css('display', 'none');`}
-                ${repTask && destination.external ? '' : `$("#storagepool-replication-task-dst-inputs-${filesystem.id}").css('display', 'none');`}
+                ${repTask && useDst ? '' : `$("#storagepool-replication-task-dst-plans-${filesystem.id}").css('display', 'none');`}
+                ${repTask && useDst ? '' : `$("#storagepool-replication-task-dst-inputs-${filesystem.id}").css('display', 'none');`}
 
                 $("#dropdown-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `").on("click", "li a", function () {
                     $("#btnspan-storagepool-replication-task-mbuffersize-unit-` + filesystem.id + `").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
@@ -21301,56 +21301,41 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
                         command.push(dstLocation);
                     }
 
+                    $("#spinner-storagepool-replication-task-configure-${filesystem.id}").removeClass("hidden");
+                    $("#spinner-storagepool-replication-task-configure-${filesystem.id} span").text("Configuring replication task...");
+
                     let process = cockpit.spawn(command, { err: "out", superuser: "require" });
 
                     process.then(data => {
-                        console.log('done', data);
                         FnReplicationTaskCreate({ name: '${filesystem.name}' }, { name: '${pool.name}', id: '${pool.id}' }, { tag: '${modal.tag}' });
                     });
 
                     process.catch(error => {
                         FnDisplayAlert({ status: "danger", title: "Replication task could not be configured", description: '${filesystem.name}', breakword: false }, { name: "replicationtask-configure" });
                     });
-
-                    // process.finally(() => {
-                    //     $("#modals-replication-task-` + filesystem.id + `").remove();
-                    // });
                 });
 
                 $("#btn-storagepool-replication-task-delete-${filesystem.id}").on("click", () => {
                     let command = ['znapzendzetup', 'delete', '${filesystem.name}'];
 
+                    $("#spinner-storagepool-replication-task-configure-${filesystem.id}").removeClass("hidden");
+                    $("#spinner-storagepool-replication-task-configure-${filesystem.id} span").text("Deleting replication task...");
+
                     let process = cockpit.spawn(command, { err: "out", superuser: "require" });
 
                     process.then(data => {
-                        console.log('done', data);
                         FnReplicationTaskDelete({ name: '${filesystem.name}' }, { name: '${pool.name}', id: '${pool.id}' }, { tag: '${modal.tag}' });
                     });
 
                     process.catch(error => {
                         FnDisplayAlert({ status: "danger", title: "Replication task could not be deleted", description: '${filesystem.name}', breakword: false }, { name: "replicationtask-delete" });
                     });
-
-                    // process.finally(() => {
-                    //     $("#modals-replication-task-` + filesystem.id + `").remove();
-                    // });
                 });
             </script>
         </div>
     `;
 
-    // modal.id.empty();
-
-    if ($(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).length > 1) {
-        console.log('here');
-        $(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).get(0).remove();
-    }
-
-    // console.log($(`#input-storagepool-replication-task-dst-dataset-${filesystem.id}`).length);
-
     modal.id.empty().append(modal.content);
-
-    // modal.id.html(modal.content);
 }
 
 function FnReplicationTaskCreate(filesystem, pool, modal) {
