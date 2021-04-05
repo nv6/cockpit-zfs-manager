@@ -1172,9 +1172,7 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
     pools.id.forEach((_value, _index) => {
         let pool = {
             properties: _value.split(/\t/g).filter(v => v),
-            actionsmenu: {
-                register: {}
-            }
+            actionsmenu: null
         };
 
         //0=name, 1=guid, 2=health, 3=size, 4=alloc, 5=free, 6=fragmentation, 7=readonly, 8=altroot, 9=autotrim, 10=version, 11=feature@allocation_classes, 12=feature@async_destroy, 13=feature@bookmark_v2, 14=feature@bookmarks, 15=feature@device_removal, 16=feature@edonr, 17=feature@embedded_data, 18=feature@empty_bpobj, 19=feature@enabled_txg, 20=feature@encryption, 21=feature@extensible_dataset, 22=feature@filesystem_limits, 23=feature@hole_birth, 24=feature@large_blocks, 25=feature@large_dnode, 26=feature@lz4_compress, 27=feature@multi_vdev_crash_dump, 28=feature@obsolete_counts, 29=feature@project_quota, 30=feature@resilver_defer, 31=feature@sha512, 32=feature@skein, 33=feature@spacemap_histogram, 34=feature@spacemap_v2, 35=feature@userobj_accounting, 36=feature@zpool_checkpoint
@@ -1278,65 +1276,31 @@ function FnStoragePoolsGetCommand(process = { data, message }) {
         `;
 
         //Actions menu
-        pool.actionsmenu.items = {
-            itemconfigure: [],
-            itemconfiguredivider: function () {
-                if (this.itemconfigure.length > 0 && (this.itemconfigurefeatures.length > 0 || this.item.length > 0)) {
-                    this.itemconfigure.push(this.divider);
-                }
-            },
-            itemconfigurefeatures: [],
-            itemconfigurefeaturesdivider: function () {
-                if (this.itemconfigurefeatures.length > 0 && this.item.length > 0) {
-                    this.itemconfigurefeatures.push(this.divider);
-                }
-            },
-            item: [],
-            divider: `<li class="divider" role="separator"></li>`
-        };
-        pool.actionsmenu.display = function () {
-            if ((this.items.itemconfigure.length + this.items.itemconfigurefeatures.length + this.items.item.length) > 0) {
-                this.items.itemconfiguredivider();
-                this.items.itemconfigurefeaturesdivider();
+        pool.actionsmenu = ZFSStoragePoolActionsMenu.initPool();
 
-                return this.header + this.items.itemconfigure.join("\n") + this.items.itemconfigurefeatures.join("\n") + this.items.item.join("\n") + this.footer;
-            } else {
-                return "";
-            }
-        };
-        pool.actionsmenu.header = `
-			<div class="dropdown dropdown-kebab-pf">
-				<button id="btn-storagepool-dropdown-` + pool.id + `" aria-expanded="false" aria-haspopup="true" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="-1" type="button">
-                    <span class="fa fa-ellipsis-v"></span>
-				</button>
-				<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="btn-storagepool-dropdown-` + pool.id + `">
-		`;
-        pool.actionsmenu.footer = `
-				</ul>
-			</div>
-		`;
+        pool.actionsmenu.register = {};
 
         //Configure Storage Pool
-        pool.actionsmenu.items.itemconfigure.push(`<li><a id="btn-storagepool-configure-` + pool.id + `" data-toggle="modal" href="#modal-storagepool-configure-` + pool.id + `" tabIndex="-1">Configure Storage Pool</a></li>`);
+        pool.actionsmenu.addAction('configuration', `<li><a id="btn-storagepool-configure-` + pool.id + `" data-toggle="modal" href="#modal-storagepool-configure-` + pool.id + `" tabIndex="-1">Configure Storage Pool</a></li>`);
 
         //Configure Storage Pool Features
-        pool.actionsmenu.items.itemconfigurefeatures.push(`<li><a id="btn-storagepool-configure-features-` + pool.id + `" data-toggle="modal" href="#modal-storagepool-configure-features-` + pool.id + `" tabIndex="-1">Configure Storage Pool Features</a></li>`);
+        pool.actionsmenu.addAction('feature_configuration', `<li><a id="btn-storagepool-configure-features-` + pool.id + `" data-toggle="modal" href="#modal-storagepool-configure-features-` + pool.id + `" tabIndex="-1">Configure Storage Pool Features</a></li>`);
 
         //Export Storage Pool
         if (!pool.boot && !pool.root) {
-            pool.actionsmenu.items.item.push(`<li><a id="btn-storagepool-export-` + pool.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-export-` + pool.id + `" tabIndex="-1">Export Storage Pool</a></li>`);
+            pool.actionsmenu.addAction('general', `<li><a id="btn-storagepool-export-` + pool.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-export-` + pool.id + `" tabIndex="-1">Export Storage Pool</a></li>`);
 
             pool.actionsmenu.register.export = true;
         }
 
         //Destroy Storage Pool
         if (!pool.readonly && !pool.boot && !pool.root) {
-            pool.actionsmenu.items.item.push(`<li><a id="btn-storagepool-destroy-` + pool.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-destroy-` + pool.id + `" tabIndex="-1">Destroy Storage Pool</a></li>`);
+            pool.actionsmenu.addAction('general', `<li><a id="btn-storagepool-destroy-` + pool.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-destroy-` + pool.id + `" tabIndex="-1">Destroy Storage Pool</a></li>`);
 
             pool.actionsmenu.register.destroy = true;
         }
 
-        pool.output += `<td class="listing-ct-actionsmenu">` + pool.actionsmenu.display() + `</td>`;
+        pool.output += `<td class="listing-ct-actionsmenu">` + pool.actionsmenu.buildPool(pool) + `</td>`;
 
         if (zfsmanager.configuration.zfs.storagepool.activetab == 2) {
             pool.activetab = "snapshots";
@@ -4977,12 +4941,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
             sharenfs: false,
             sharesmb: false,
             type: "File System",
-            actionsmenu: {
-                register: {
-                    samba: {},
-                    snapshot: {}
-                }
-            }
+            actionsmenu: null
         };
 
         let existingReplicationTask = null;
@@ -5208,78 +5167,26 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 filesystem.output += `</td>`;
 
                 //Actions menu
-                filesystem.actionsmenu.items = {
-                    itemconfigure: [],
-                    itemconfiguredivider: function () {
-                        if (this.itemconfigure.length > 0 && this.item.length > 0) {
-                            this.itemconfigure.push(this.divider);
-                        }
-                    },
-                    item: [],
-                    itemdivider: function () {
-                        if (this.item.length > 0 && this.itemencrypted.length > 0) {
-                            this.item.push(this.divider);
-                        }
-                    },
-                    itemencrypted: [],
-                    itemencrypteddivider: function () {
-                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && (this.itemsamba.length > 0 || this.itemsnapshot.length > 0 || this.itemreplication.length > 0)) {
-                            this.itemencrypted.push(this.divider);
-                        }
-                    },
-                    itemreplication: [],
-                    itemreplicationdivider: function () {
-                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && (this.itemsamba.length > 0 || this.itemsnapshot.length > 0)) {
-                            this.itemreplication.push(this.divider);
-                        }
-                    },
-                    itemsamba: [],
-                    itemsambadivider: function () {
-                        if ((this.item.length > 0 || this.itemencrypted.length > 0) && this.itemsamba.length > 0 && this.itemsnapshot.length > 0) {
-                            this.itemsamba.push(this.divider);
-                        }
-                    },
-                    itemsnapshot: [],
-                    divider: `<li class="divider" role="separator"></li>`
-                };
-                filesystem.actionsmenu.display = function () {
-                    if (/@/g.test(filesystem.name) == false && (this.items.itemconfigure.length + this.items.item.length + this.items.itemencrypted.length + this.items.itemsamba.length + this.items.itemsnapshot.length) > 0) {
-                        this.items.itemconfiguredivider();
-                        this.items.itemdivider();
-                        this.items.itemencrypteddivider();
-                        this.items.itemreplicationdivider();
-                        this.items.itemsambadivider();
+                filesystem.actionsmenu = ZFSStoragePoolActionsMenu.initFS();
 
-                        return this.header + this.items.itemconfigure.join("\n") + this.items.item.join("\n") + this.items.itemencrypted.join("\n") + this.items.itemreplication.join("\n") + this.items.itemsamba.join("\n") + this.items.itemsnapshot.join("\n") + this.footer;
-                    } else {
-                        return "";
-                    }
+                filesystem.actionsmenu.register = {
+                    samba: {},
+                    snapshot: {},
                 };
-                filesystem.actionsmenu.header = `
-					<div class="dropdown pull-right dropdown-kebab-pf">
-						<button id="btn-storagepool-filesystem-dropdown-` + filesystem.id + `" aria-expanded="false" aria-haspopup="true" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="-1" type="button">
-                            <span class="fa fa-ellipsis-v"></span>
-						</button>
-						<ul aria-labelledby="btn-storagepool-filesystem-dropdown-` + filesystem.id + `" class="dropdown-menu dropdown-menu-right">
-				`;
-                filesystem.actionsmenu.footer = `
-						</ul>
-					</div>
-				`;
 
                 //Configure File System
-                filesystem.actionsmenu.items.itemconfigure.push(`<li><a id="btn-storagepool-filesystem-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-filesystem-configure-` + filesystem.id + `" tabIndex="-1">Configure ` + filesystem.type + `</a></li>`);
+                filesystem.actionsmenu.addAction('configuration', `<li><a id="btn-storagepool-filesystem-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-filesystem-configure-` + filesystem.id + `" tabIndex="-1">Configure ` + filesystem.type + `</a></li>`);
 
                 //Rename File System
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.name != pool.name) {
-                    filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-rename-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-rename-` + filesystem.id + `" tabIndex="-1">Rename ` + filesystem.type + `</a></li>`);
+                    filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-rename-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-rename-` + filesystem.id + `" tabIndex="-1">Rename ` + filesystem.type + `</a></li>`);
 
                     filesystem.actionsmenu.register.rename = true;
                 }
 
                 //Promote Clone File System
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.clone && filesystem.origin.replace(/^(.*)\@.*$/, "$1") != pool.name) {
-                    filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-promote-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-promote-` + filesystem.id + `" tabIndex="-1">Promote ` + filesystem.type + `</a></li>`);
+                    filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-promote-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-promote-` + filesystem.id + `" tabIndex="-1">Promote ` + filesystem.type + `</a></li>`);
 
                     filesystem.actionsmenu.register.promote = true;
                 }
@@ -5287,11 +5194,11 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 //Mount File System / Unmount File System
                 if (!pool.boot || pool.boot && !zfsmanager.configuration.zfs.storagepool.bootlockdown) {
                     if (!filesystem.mounted && filesystem.keystatus != "unavailable") {
-                        filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-mount-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-mount-` + filesystem.id + `" tabIndex="-1">Mount ` + filesystem.type + `</a></li>`);
+                        filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-mount-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-mount-` + filesystem.id + `" tabIndex="-1">Mount ` + filesystem.type + `</a></li>`);
 
                         filesystem.actionsmenu.register.mount = true;
                     } else if (filesystem.mounted) {
-                        filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-unmount-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-unmount-` + filesystem.id + `" tabIndex="-1">Unmount ` + filesystem.type + `</a></li>`);
+                        filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-unmount-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-unmount-` + filesystem.id + `" tabIndex="-1">Unmount ` + filesystem.type + `</a></li>`);
 
                         filesystem.actionsmenu.register.unmount = true;
                     }
@@ -5299,18 +5206,18 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
 
                 //Unlock File System / Lock File System
                 if (filesystem.keystatus == "unavailable" && !filesystem.clone && filesystem.encryptionroot == filesystem.name) {
-                    filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-unlock-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-unlock-` + filesystem.id + `" tabIndex="-1"><strong class="` + (zfsmanager.user.admin ? `text-ct-locked` : ``) + `">Unlock File System</strong></a></li>`);
+                    filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-unlock-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-unlock-` + filesystem.id + `" tabIndex="-1"><strong class="` + (zfsmanager.user.admin ? `text-ct-locked` : ``) + `">Unlock File System</strong></a></li>`);
 
                     filesystem.actionsmenu.register.unlock = true;
                 } else if (filesystem.keystatus == "available" && !filesystem.mounted && !filesystem.clone && filesystem.encryptionroot == filesystem.name) {
-                    filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-lock-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-lock-` + filesystem.id + `" tabIndex="-1">Lock File System</a></li>`);
+                    filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-lock-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-lock-` + filesystem.id + `" tabIndex="-1">Lock File System</a></li>`);
 
                     filesystem.actionsmenu.register.lock = true;
                 }
 
                 //Change Passphrase
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.keystatus == "available" && !filesystem.clone && filesystem.encryptionroot == filesystem.name) {
-                    filesystem.actionsmenu.items.itemencrypted.push(`<li><a id="btn-storagepool-filesystem-changepassphrase-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-changepassphrase-` + filesystem.id + `" tabIndex="-1">Change Passphrase</a></li>`);
+                    filesystem.actionsmenu.addAction('encryption', `<li><a id="btn-storagepool-filesystem-changepassphrase-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-changepassphrase-` + filesystem.id + `" tabIndex="-1">Change Passphrase</a></li>`);
 
                     filesystem.actionsmenu.register.changepassphrase = true;
                 }
@@ -5318,7 +5225,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 //Destroy File System
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.name != pool.name) {
                     if (!filesystem.clone || filesystem.clone && new RegExp("^" + filesystem.name + "/").test(filesystem.origin.replace(/^(.*)\@.*$/, "$1")) == false) { //Do not display if clone origin is a child file system - will generate recursive dependency error
-                        filesystem.actionsmenu.items.item.push(`<li><a id="btn-storagepool-filesystem-destroy-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-destroy-` + filesystem.id + `" tabIndex="-1">Destroy ` + filesystem.type + `</a></li>`);
+                        filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-destroy-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-destroy-` + filesystem.id + `" tabIndex="-1">Destroy ` + filesystem.type + `</a></li>`);
 
                         filesystem.actionsmenu.register.destroy = true;
                     }
@@ -5327,7 +5234,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 //Configure Replication Task
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.name != pool.name) {
                     if (!filesystem.clone || filesystem.clone && new RegExp("^" + filesystem.name + "/").test(filesystem.origin.replace(/^(.*)\@.*$/, "$1")) == false) { //Do not display if clone origin is a child file system - will generate recursive dependency error
-                        filesystem.actionsmenu.items.itemreplication.push(`<li><a id="btn-storagepool-replication-task-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-replication-task-configure-` + filesystem.id + `" tabIndex="-1">Configure Replication Task</a></li>`);
+                        filesystem.actionsmenu.addAction('replication', `<li><a id="btn-storagepool-replication-task-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-replication-task-configure-` + filesystem.id + `" tabIndex="-1">Configure Replication Task</a></li>`);
 
                         filesystem.actionsmenu.register.task_replication = true;
                     }
@@ -5335,33 +5242,33 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
 
                 //Enable Samba Share
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && !filesystem.sharesmb && zfsmanager.configuration.samba.manage) {
-                    filesystem.actionsmenu.items.itemsamba.push(`<li><a id="btn-storagepool-filesystem-samba-enable-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-enable-` + filesystem.id + `" tabIndex="-1">Enable Samba Share</a></li>`);
+                    filesystem.actionsmenu.addAction('samba', `<li><a id="btn-storagepool-filesystem-samba-enable-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-enable-` + filesystem.id + `" tabIndex="-1">Enable Samba Share</a></li>`);
 
                     filesystem.actionsmenu.register.samba.enable = true;
                 }
 
                 //Configure Samba Share
                 if (filesystem.sharesmb && zfsmanager.configuration.samba.manage) {
-                    filesystem.actionsmenu.items.itemsamba.push(`<li><a id="btn-storagepool-filesystem-samba-configure-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-configure-` + filesystem.id + `" tabIndex="-1">Configure Samba Share</a></li>`);
+                    filesystem.actionsmenu.addAction('samba', `<li><a id="btn-storagepool-filesystem-samba-configure-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-configure-` + filesystem.id + `" tabIndex="-1">Configure Samba Share</a></li>`);
 
                     filesystem.actionsmenu.register.samba.configure = true;
                 }
 
                 //Disable Samba Share
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.sharesmb && zfsmanager.configuration.samba.manage) {
-                    filesystem.actionsmenu.items.itemsamba.push(`<li><a id="btn-storagepool-filesystem-samba-disable-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-disable-` + filesystem.id + `" tabIndex="-1">Disable Samba Share</a></li>`);
+                    filesystem.actionsmenu.addAction('samba', `<li><a id="btn-storagepool-filesystem-samba-disable-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-samba-disable-` + filesystem.id + `" tabIndex="-1">Disable Samba Share</a></li>`);
 
                     filesystem.actionsmenu.register.samba.disable = true;
                 }
 
                 //Create Snapshot
                 if (!pool.readonly && zfsmanager.configuration.zfs.filesystem.snapshotactions) {
-                    filesystem.actionsmenu.items.itemsnapshot.push(`<li><a id="btn-storagepool-filesystem-snapshot-create-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-snapshot-create-` + filesystem.id + `" tabIndex="-1">Create Snapshot</a></li>`);
+                    filesystem.actionsmenu.addAction('snapshot', `<li><a id="btn-storagepool-filesystem-snapshot-create-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-snapshot-create-` + filesystem.id + `" tabIndex="-1">Create Snapshot</a></li>`);
 
                     filesystem.actionsmenu.register.snapshot.create = true;
                 }
 
-                filesystem.output += `<td class="listing-ct-actionsmenu">` + filesystem.actionsmenu.display() + `</td>`;
+                filesystem.output += `<td class="listing-ct-actionsmenu">` + filesystem.actionsmenu.buildFS(filesystem) + `</td>`;
             }
         });
 
@@ -20967,7 +20874,116 @@ function FnModalStatusVirtualDeviceRemoveContent(pool = { name, id, status: { co
 }
 //#endregion
 
-//#region Modal Replication Task
+//#region Storage Pool Actions Menu
+
+class ZFSStoragePoolActionsMenu {
+    constructor() {
+        this.sections = {};
+        this.sectionList = [];
+    }
+
+    headerPool(pool) {
+        return `
+        <div class="dropdown dropdown-kebab-pf">
+            <button id="btn-storagepool-dropdown-${pool.id}" aria-expanded="false" aria-haspopup="true" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="-1" type="button">
+                <span class="fa fa-ellipsis-v"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="btn-storagepool-dropdown-${pool.id}">
+        `;
+    }
+
+    headerFS(filesystem) {
+        return `
+        <div class="dropdown pull-right dropdown-kebab-pf">
+            <button id="btn-storagepool-filesystem-dropdown-${filesystem.id}" aria-expanded="false" aria-haspopup="true" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="-1" type="button">
+                <span class="fa fa-ellipsis-v"></span>
+            </button>
+            <ul aria-labelledby="btn-storagepool-filesystem-dropdown-${filesystem.id}" class="dropdown-menu dropdown-menu-right">
+        `;
+    }
+
+    footer() {
+        return `
+            </ul>
+        </div>`;
+    }
+
+    isSection(section) {
+        return Object.hasOwnProperty.call(this.sections, section);
+    }
+
+    addSection(section, divider = true) {
+        if (!this.isSection(section)) {
+            this.sectionList.push(section);
+            this.sections[section] = {
+                items: [],
+                divider,
+            };
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    addAction(section, content) {
+        this.addSection(section);
+        this.sections[section].items.push(content);
+    }
+
+    appendDividers() {
+        let divider = `<li class="divider" role="separator"></li>`;
+
+        if (this.sectionList.reduce((total, s) => total += this.sections[s].items.length, 0) < 1) return false;
+
+        for (let i = 0; i < this.sectionList.length; i++) {
+            const section = this.sectionList[i];
+
+            if (!this.sections[section].divider) continue;
+            let otherSectionsList = this.sectionList.slice(i + 1, this.sectionList.length);
+            let totalItems = otherSectionsList.reduce((total, s) => total += this.sections[s].items.length, 0);
+            if (totalItems > 0 && this.sections[section].items.length > 0) this.sections[section].items.push(divider);
+        }
+    }
+
+    static initPool() {
+        let menu = new ZFSStoragePoolActionsMenu();
+        menu.addSection('configuration', true);
+        menu.addSection('feature_configuration', true);
+        menu.addSection('general', true);
+        return menu;
+    }
+
+    static initFS() {
+        let menu = new ZFSStoragePoolActionsMenu();
+        menu.addSection('configuration', true);
+        menu.addSection('general', true);
+        menu.addSection('encryption', true);
+        menu.addSection('replication', true);
+        menu.addSection('samba', true);
+        menu.addSection('snapshot', true);
+        return menu;
+    }
+
+    buildPool(pool) {
+        if (this.appendDividers() === false) return '';
+        let output = this.headerPool(pool);
+        output += this.sectionList.map(s => this.sections[s].items.join('\n')).join('');
+        output += this.footer();
+        return output;
+    }
+
+    buildFS(filesystem) {
+        if (this.appendDividers() === false && /@/g.test(filesystem.name) === false) return '';
+        let output = this.headerFS(filesystem);
+        output += this.sectionList.map(s => this.sections[s].items.join('\n')).join('');
+        output += this.footer();
+        return output;
+    }
+}
+//#endregion
+
+//#region Replication Task
 
 function znapzendUnitForReload(x) {
     if (x.match(/second/gi)) return 'Second';
