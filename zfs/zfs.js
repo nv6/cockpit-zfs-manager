@@ -21108,17 +21108,15 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
                 </div>
                 <div class="modal-body">
                     <div class="ct-form">
-                        <label class="control-label">Recursive</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label">Recursive</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-recursive-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox"${repTask && recursive ? ' checked' : ''}>
-                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
                         </div>
-                        <label class="control-label">Destination</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label">Destination</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-use-destination-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox" ${repTask && useDst ? ' checked' : ''}>
-                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
                         </div>
-                        <label class="control-label">mBuffer Size</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label">mBuffer Size</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper">
                             <input id="input-storagepool-replication-task-mbuffersize-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" value="${repTask && mBufferSize.length === 2 ? mBufferSize[0] : '1'}">
                             <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
@@ -21150,22 +21148,21 @@ async function FnModalReplicationTaskCreateContent(pool, filesystem, modal) {
                         <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">${repTask && useDst ? dstScript : ''}</script>
                     </div>
                     <div class="ct-form" id="storagepool-replication-task-dst-inputs-` + filesystem.id + `">
-                        <label class="control-label">External Destination</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label">External Destination</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-external-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox"${repTask && destination.external ? ' checked' : ''}>
-                            <!-- <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span> -->
                         </div>
-                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">User</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">User</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper external-storagepool-replication-task-item-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-user-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.user ? destination.user : ''}">
                             <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
                         </div>
-                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">Host</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label external-storagepool-replication-task-item-` + filesystem.id + `">Host</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper external-storagepool-replication-task-item-` + filesystem.id + `">
                             <input id="input-storagepool-replication-task-host-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.host ? destination.host : ''}">
                             <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
                         </div>
-                        <label class="control-label">Destination Dataset</label> <!-- <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="Alphanumerical characters are allowed with the addition of colon (:), hypen (-), underscore (_), period (.) and whitespace ( ) special characters.<br><br>Name can not begin with special characters.<br><br>Forward slash (/) can be used to create child file systems."><span class="fa fa-lg fa-info-circle"></span></a> -->
+                        <label class="control-label">Destination Dataset</label>
                         <div id="validationwrapper-storagepool-replication-task-` + filesystem.id + `" class="ct-validation-wrapper">
                             <input id="input-storagepool-replication-task-dst-dataset-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${repTask && destination.dataset ? destination.dataset : ''}">
                             <span id="helpblock-storagepool-replication-task-` + filesystem.id + `" class="help-block"></span>
