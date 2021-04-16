@@ -7182,7 +7182,15 @@ pf-c-empty-state .pf-c-button.pf-m-primary.slim {
     margin-top: 8px;
 }
 
+.w-100 {
+    width: 100%;
+}
+
 .modal-title a {
     color: #444;
     text-decoration: none;
+}
+
+h6.modal-title {
+    font-size: 14px;
 }

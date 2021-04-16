@@ -4255,6 +4255,14 @@ function FnStoragePoolRefreshCommand(pool = { name, id }) {
             } else {
                 $rtEl.empty();
             }
+
+            let $peEl = $(`modals-permissions-edit-` + pool.id);
+
+            if ($peEl.length < 1) {
+                $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
+            } else {
+                $peEl.empty();
+            }
             
             $("#div-storagepool-health-" + pool.id).empty().html(`<span class="` + pool.healthicon + `"></span> ` + pool.health);
             $("#div-storagepool-size-" + pool.id).text(pool.size);
@@ -4919,6 +4927,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
     $("#modals").append(`<div id="modals-storagepool-filesystems-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-storagepool-filesystem-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
+    $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
 
     filesystems.forEach(async (_value, _index) => {
         let filesystem = {
@@ -5177,6 +5186,13 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
                 //Configure File System
                 filesystem.actionsmenu.addAction('configuration', `<li><a id="btn-storagepool-filesystem-configure-` + filesystem.id + `" data-toggle="modal" href="#modal-storagepool-filesystem-configure-` + filesystem.id + `" tabIndex="-1">Configure ` + filesystem.type + `</a></li>`);
 
+                //Edit Permissions
+                if (!pool.readonly && !filesystem.readonly && filesystem.name != pool.name) {
+                    filesystem.actionsmenu.addAction('configuration', `<li><a id="btn-storagepool-permissions-edit-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-permissions-edit-` + filesystem.id + `" tabIndex="-1">Edit Permissions</a></li>`);
+
+                    filesystem.actionsmenu.register.editpermissions = true;
+                }
+
                 //Rename File System
                 if (!pool.readonly && (!filesystem.readonly || filesystem.readonly && !zfsmanager.configuration.zfs.filesystem.readonlylockdown) && filesystem.name != pool.name) {
                     filesystem.actionsmenu.addAction('general', `<li><a id="btn-storagepool-filesystem-rename-` + filesystem.id + `" class="privileged` + (!zfsmanager.user.admin ? " disabled" : "") + `" data-toggle="modal" href="#modal-storagepool-filesystem-rename-` + filesystem.id + `" tabIndex="-1">Rename ` + filesystem.type + `</a></li>`);
@@ -5278,6 +5294,9 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
 
         //Register file system modals
         FnModalFileSystemConfigure({ name: pool.name, id: pool.id, altroot: pool.altroot, feature: { allocation_classes: pool.feature.allocation_classes, edonr: pool.feature.edonr, large_blocks: pool.feature.large_blocks, large_dnode: pool.feature.large_dnode, lz4_compress: pool.feature.lz4_compress, sha512: pool.feature.sha512, skein: pool.feature.skein }, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, origin: filesystem.origin, type: filesystem.type });
+        if (filesystem.actionsmenu.register.editpermissions) {
+            FnModalPermissionsEdit({ name: pool.name, id: pool.id }, { name: filesystem.name, id: filesystem.id, mountpoint: filesystem.mountpoint });
+        }
         if (filesystem.actionsmenu.register.changepassphrase) {
             FnModalFileSystemChangePassphrase({ name: pool.name, id: pool.id }, { name: filesystem.name, id: filesystem.id });
         }
@@ -21514,4 +21533,321 @@ function AddDstPlan(element, data = { ret: '1', retUnit: 'Second', int: '1', int
 `);
 }
 
+//#endregion
+
+//#region Dataset Permissions
+
+function FnModalPermissionsEdit(pool, filesystem) {
+    let modal = {
+        window: ""
+    };
+
+    let $el = $(`#modal-storagepool-permissions-edit-` + filesystem.id);
+
+    if ($el.length > 0) {
+        $el.remove();
+    }
+
+    modal.window = `
+        <div id="modal-storagepool-permissions-edit-` + filesystem.id + `" aria-hidden="true" class="modal fade" data-backdrop="static" role="dialog" tabindex="-1"></div>
+
+        <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+			$("#btn-storagepool-permissions-edit-` + filesystem.id + `").on("click", function () {
+                FnModalPermissionsEditContent({id: '${pool.id}', name: '${pool.name}'}, {id: '${filesystem.id}', name: '${filesystem.name}', mountpoint: '${filesystem.mountpoint}'}, { id: $("#modal-storagepool-permissions-edit-` + filesystem.id + `"), tag: "#modal-storagepool-permissions-edit-` + filesystem.id + `" });
+			});
+        </script>
+    `;
+
+    $("#modals-permissions-edit-" + pool.id).append(modal.window);
+}
+
+async function FnModalPermissionsEditContent(pool, filesystem, modal) {
+    let users = [];
+    let groups = [];
+
+    try {
+        users = await cockpit.spawn(['getent', 'passwd'], { err: 'out', superuser: 'require', });
+        users = users.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000).map(l => ({ name: l[0], id: Number(l[2]), }));
+
+        groups = await cockpit.spawn(['getent', 'group'], { err: 'out', superuser: 'require', });
+        groups = groups.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000).map(l => ({ name: l[0], id: Number(l[2]), }));
+    } catch (error) {
+        console.error(error);
+    }
+
+    modal.content = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Permissions</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="ct-form">
+                        <label class="control-label">Path</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-path-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="text" value="${filesystem.mountpoint}" disabled>
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <h6 class="modal-title">ACL Type <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="INFO HERE"><span class="fa fa-lg fa-info-circle"></span></a></h6>
+                    </div>
+
+                    <div class="ct-form">
+                        <label class="control-label">Unix</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
+                        </div>
+                    </div>
+
+                    <div class="ct-form" id="wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `">
+                        <label class="control-label">Owner</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Group</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-unix-group-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Other</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-unix-other-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Execute</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="ct-form">
+                        <label class="control-label">Windows</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
+                        </div>
+                    </div>
+
+                    <div class="ct-form">
+                        <label class="control-label">Mac</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
+                        </div>
+                    </div>
+
+                    <div class="ct-form" id="wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `">
+                        <label class="control-label">Owner</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Group</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-mac-group-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Other</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
+                            <input id="input-storagepool-permissions-edit-mac-other-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
+                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        </div>
+
+                        <label class="control-label">Execute</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="mt-2 w-100"></div>
+                        
+                    <div class="ct-form">
+                        <!-- <label class="control-label">Apply User</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-apply-user-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                        </div> -->
+
+                        <label class="control-label">User</label>
+                        <div class="ct-validation-wrapper">
+                            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                                    <span id="btnspan-storagepool-permissions-edit-user-` + filesystem.id + `" class="pull-left" data-field-value="${users[0].name}">${users[0].name}</span>
+                                    <div class="caret"></div>
+                                </button>
+                                <ul id="dropdown-storagepool-permissions-edit-user-` + filesystem.id + `" class="dropdown-menu">
+                                    ${users.map(u => `<li value="${u.name}"><a tabindex="-1">${u.name}</a></li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- <label class="control-label">Apply Group</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-apply-group-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                        </div> -->
+
+                        <label class="control-label">Group</label>
+                        <div class="ct-validation-wrapper">
+                            <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
+                                <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
+                                    <span id="btnspan-storagepool-permissions-edit-group-` + filesystem.id + `" class="pull-left" data-field-value="${groups[0].name}">${groups[0].name}</span>
+                                    <div class="caret"></div>
+                                </button>
+                                <ul id="dropdown-storagepool-permissions-edit-group-` + filesystem.id + `" class="dropdown-menu">
+                                    ${groups.map(g => `<li value="${g.name}"><a tabindex="-1">${g.name}</a></li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="mt-2 w-100"></div>
+                        
+                    <div class="ct-form">
+                        <label class="control-label">Apply Permissions Recursively</label>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
+                            <input id="input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div></div>
+                    <div id="spinner-storagepool-permissions-edit-configure-` + filesystem.id + `" class="dialog-wait-ct pull-left hidden">
+                        <div class="spinner spinner-sm"></div><span></span>
+                    </div>
+                    <div class="modal-ct-buttons">
+                        <button class="btn btn-default cancel" data-dismiss="modal" tabindex="-1">Cancel</button>
+                        <button id="btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `" class="btn btn-primary apply privileged-modal" tabindex="-1">Update</button>
+                    </div>
+                </div>
+            </div>
+
+            <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
+                // OGO/E
+                const aclUnixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `');
+                const aclMacWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `');
+
+                const aclUnixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
+                const aclUnixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
+                const aclUnixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
+                const aclUnixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
+
+                const aclMacOwner = document.querySelector('#input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `');
+                const aclMacGroup = document.querySelector('#input-storagepool-permissions-edit-mac-group-` + filesystem.id + `');
+                const aclMacOther = document.querySelector('#input-storagepool-permissions-edit-mac-other-` + filesystem.id + `');
+                const aclMacExecute = document.querySelector('#input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `');
+
+                // Path
+                const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
+                
+                // ACL Type Select
+                const aclTypeUnix = document.querySelector('#input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `');
+                const aclTypeWindows = document.querySelector('#input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `');
+                const aclTypeMac = document.querySelector('#input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `');
+                
+                // Allow User/Group Select
+                // document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
+                // document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
+                const recursivePermissions = document.querySelector('#input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `');
+
+                const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
+
+                aclUnixWrapper.style.display = 'none';
+                aclMacWrapper.style.display = 'none';
+
+                $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
+                    $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                    $(this).parent().siblings().removeClass("active");
+                    $(this).parent().addClass("active");
+                });
+
+                $("#dropdown-storagepool-permissions-edit-group-${filesystem.id}").on("click", "li a", function () {
+                    $("#btnspan-storagepool-permissions-edit-group-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                    $(this).parent().siblings().removeClass("active");
+                    $(this).parent().addClass("active");
+                });
+
+                let opType = '';
+                let unixBasedPermissionData = {};
+
+                function updateAclInformation() {
+                    if (aclTypeUnix.checked) {
+                        unixBasedPermissionData = {
+                            owner: aclUnixOwner.value,
+                            group: aclUnixGroup.value,
+                            other: aclUnixOther.value,
+                            execute: aclUnixExecute.checked,
+                        };
+                    } else if (aclTypeMac.checked) {
+                        unixBasedPermissionData = {
+                            owner: aclMacOwner.value,
+                            group: aclMacGroup.value,
+                            other: aclMacOther.value,
+                            execute: aclMacExecute.checked,
+                        };
+                    }
+                }
+
+                aclTypeUnix.addEventListener('input', event => {
+                    opType = 'unix';
+
+                    if (event.target.checked) {
+                        aclUnixWrapper.style.display = 'flex';
+                    } else {
+                        aclUnixWrapper.style.display = 'none';
+                    }
+                });
+
+                aclTypeWindows.addEventListener('input', event => {
+
+                });
+
+                aclTypeMac.addEventListener('input', event => {
+                    opType = 'unix';
+
+                    if (event.target.checked) {
+                        aclMacWrapper.style.display = 'flex';
+                    } else {
+                        aclMacWrapper.style.display = 'none';
+                    }
+                });
+
+                permissionsUpdateBtn.addEventListener('click', async () => {
+                    updateAclInformation();
+
+                    const permissionUser = document.querySelector('#btnspan-storagepool-permissions-edit-user-` + filesystem.id + `').getAttribute('data-field-value');
+                    const permissionGroup = document.querySelector('#btnspan-storagepool-permissions-edit-group-` + filesystem.id + `').getAttribute('data-field-value');
+
+                    let recursive = recursivePermissions.checked;
+
+                    if (opType === 'unix') {
+                        let info = unixBasedPermissionData;
+                        let commands = {
+                            execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
+                            permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
+                            owner: ['chown', recursive ? '-R' : null, \`\${permissionUser}:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
+                        };
+
+                        try {
+                            if (info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
+                            await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
+                            await cockpit.spawn(commands.owner, { err: 'out', superuser: 'require', });
+
+                            FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                        } catch (error) {
+                            FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                            console.error(error);
+                        }
+                    }
+                });
+            </script>
+        </div>
+    `;
+
+    modal.id.empty().append(modal.content);
+}
 //#endregion
