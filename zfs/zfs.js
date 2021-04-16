@@ -4918,7 +4918,7 @@ function FnFileSystemsGet(pool = { name, id }) {
         });
 }
 
-function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true }, readonly: false, sizeraw: 0 }, process = { data, message }) {
+async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false, feature: { allocation_classes: true, edonr: true, encryption: true, large_blocks: true, large_dnode: true, lz4_compress: true, sha512: true, skein: true }, readonly: false, sizeraw: 0 }, process = { data, message }) {
     let filesystems = process.data.split(/\n/g).filter(v => v);
 
     $("#tbody-storagepool-filesystems-" + pool.id).empty();
@@ -4929,7 +4929,7 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
     $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
 
-    filesystems.forEach(async (_value, _index) => {
+    let filesystemsTableContents = await Promise.all(filesystems.map(async (_value, _index) => {
         let filesystem = {
             properties: _value.split(/\t/g).filter(v => v),
             clone: false,
@@ -5290,8 +5290,6 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
 
         filesystem.output += `</tr>`;
 
-        $("#tbody-storagepool-filesystems-" + pool.id).append(filesystem.output);
-
         //Register file system modals
         FnModalFileSystemConfigure({ name: pool.name, id: pool.id, altroot: pool.altroot, feature: { allocation_classes: pool.feature.allocation_classes, edonr: pool.feature.edonr, large_blocks: pool.feature.large_blocks, large_dnode: pool.feature.large_dnode, lz4_compress: pool.feature.lz4_compress, sha512: pool.feature.sha512, skein: pool.feature.skein }, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, origin: filesystem.origin, type: filesystem.type });
         if (filesystem.actionsmenu.register.editpermissions) {
@@ -5336,7 +5334,11 @@ function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: false,
         if (filesystem.actionsmenu.register.unmount) {
             FnModalFileSystemUnmount({ name: pool.name, id: pool.id, altroot: pool.altroot, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, encryptionroot: filesystem.encryptionroot, keystatus: filesystem.keystatus, sharesmb: filesystem.sharesmb, type: filesystem.type });
         }
-    });
+
+        return filesystem.output;
+    }));
+
+    $("#tbody-storagepool-filesystems-" + pool.id).append(filesystemsTableContents.join(''));
 
     //Register file systems modals
     if (!pool.readonly) {
