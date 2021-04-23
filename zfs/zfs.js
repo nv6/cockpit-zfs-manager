@@ -4929,7 +4929,9 @@ async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: 
     $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
 
-    let filesystemsTableContents = await Promise.all(filesystems.map(async (_value, _index) => {
+    for (let _index = 0; _index < filesystems.length; _index++) {
+        let _value = filesystems[_index];
+
         let filesystem = {
             properties: _value.split(/\t/g).filter(v => v),
             clone: false,
@@ -5290,6 +5292,8 @@ async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: 
 
         filesystem.output += `</tr>`;
 
+        $("#tbody-storagepool-filesystems-" + pool.id).append(filesystem.output);
+
         //Register file system modals
         FnModalFileSystemConfigure({ name: pool.name, id: pool.id, altroot: pool.altroot, feature: { allocation_classes: pool.feature.allocation_classes, edonr: pool.feature.edonr, large_blocks: pool.feature.large_blocks, large_dnode: pool.feature.large_dnode, lz4_compress: pool.feature.lz4_compress, sha512: pool.feature.sha512, skein: pool.feature.skein }, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, origin: filesystem.origin, type: filesystem.type });
         if (filesystem.actionsmenu.register.editpermissions) {
@@ -5334,11 +5338,7 @@ async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: 
         if (filesystem.actionsmenu.register.unmount) {
             FnModalFileSystemUnmount({ name: pool.name, id: pool.id, altroot: pool.altroot, readonly: pool.readonly }, { name: filesystem.name, id: filesystem.id, encryptionroot: filesystem.encryptionroot, keystatus: filesystem.keystatus, sharesmb: filesystem.sharesmb, type: filesystem.type });
         }
-
-        return filesystem.output;
-    }));
-
-    $("#tbody-storagepool-filesystems-" + pool.id).append(filesystemsTableContents.join(''));
+    }
 
     //Register file systems modals
     if (!pool.readonly) {
@@ -21729,122 +21729,124 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
             </div>
 
             <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
-                // OGO/E
-                const aclUnixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `');
-                const aclMacWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `');
+                (() => {
+                    // OGO/E
+                    const aclUnixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `');
+                    const aclMacWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `');
 
-                const aclUnixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
-                const aclUnixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
-                const aclUnixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
-                const aclUnixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
+                    const aclUnixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
+                    const aclUnixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
+                    const aclUnixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
+                    const aclUnixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
 
-                const aclMacOwner = document.querySelector('#input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `');
-                const aclMacGroup = document.querySelector('#input-storagepool-permissions-edit-mac-group-` + filesystem.id + `');
-                const aclMacOther = document.querySelector('#input-storagepool-permissions-edit-mac-other-` + filesystem.id + `');
-                const aclMacExecute = document.querySelector('#input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `');
+                    const aclMacOwner = document.querySelector('#input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `');
+                    const aclMacGroup = document.querySelector('#input-storagepool-permissions-edit-mac-group-` + filesystem.id + `');
+                    const aclMacOther = document.querySelector('#input-storagepool-permissions-edit-mac-other-` + filesystem.id + `');
+                    const aclMacExecute = document.querySelector('#input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `');
 
-                // Path
-                const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
-                
-                // ACL Type Select
-                const aclTypeUnix = document.querySelector('#input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `');
-                const aclTypeWindows = document.querySelector('#input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `');
-                const aclTypeMac = document.querySelector('#input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `');
-                
-                // Allow User/Group Select
-                // document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
-                // document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
-                const recursivePermissions = document.querySelector('#input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `');
+                    // Path
+                    const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
+                    
+                    // ACL Type Select
+                    const aclTypeUnix = document.querySelector('#input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `');
+                    const aclTypeWindows = document.querySelector('#input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `');
+                    const aclTypeMac = document.querySelector('#input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `');
+                    
+                    // Allow User/Group Select
+                    // document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
+                    // document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
+                    const recursivePermissions = document.querySelector('#input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `');
 
-                const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
+                    const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
 
-                aclUnixWrapper.style.display = 'none';
-                aclMacWrapper.style.display = 'none';
+                    aclUnixWrapper.style.display = 'none';
+                    aclMacWrapper.style.display = 'none';
 
-                $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
-                    $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
-                    $(this).parent().siblings().removeClass("active");
-                    $(this).parent().addClass("active");
-                });
+                    $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
+                        $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                        $(this).parent().siblings().removeClass("active");
+                        $(this).parent().addClass("active");
+                    });
 
-                $("#dropdown-storagepool-permissions-edit-group-${filesystem.id}").on("click", "li a", function () {
-                    $("#btnspan-storagepool-permissions-edit-group-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
-                    $(this).parent().siblings().removeClass("active");
-                    $(this).parent().addClass("active");
-                });
+                    $("#dropdown-storagepool-permissions-edit-group-${filesystem.id}").on("click", "li a", function () {
+                        $("#btnspan-storagepool-permissions-edit-group-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
+                        $(this).parent().siblings().removeClass("active");
+                        $(this).parent().addClass("active");
+                    });
 
-                let opType = '';
-                let unixBasedPermissionData = {};
+                    let opType = '';
+                    let unixBasedPermissionData = {};
 
-                function updateAclInformation() {
-                    if (aclTypeUnix.checked) {
-                        unixBasedPermissionData = {
-                            owner: aclUnixOwner.value,
-                            group: aclUnixGroup.value,
-                            other: aclUnixOther.value,
-                            execute: aclUnixExecute.checked,
-                        };
-                    } else if (aclTypeMac.checked) {
-                        unixBasedPermissionData = {
-                            owner: aclMacOwner.value,
-                            group: aclMacGroup.value,
-                            other: aclMacOther.value,
-                            execute: aclMacExecute.checked,
-                        };
-                    }
-                }
-
-                aclTypeUnix.addEventListener('input', event => {
-                    opType = 'unix';
-
-                    if (event.target.checked) {
-                        aclUnixWrapper.style.display = 'flex';
-                    } else {
-                        aclUnixWrapper.style.display = 'none';
-                    }
-                });
-
-                aclTypeWindows.addEventListener('input', event => {
-
-                });
-
-                aclTypeMac.addEventListener('input', event => {
-                    opType = 'unix';
-
-                    if (event.target.checked) {
-                        aclMacWrapper.style.display = 'flex';
-                    } else {
-                        aclMacWrapper.style.display = 'none';
-                    }
-                });
-
-                permissionsUpdateBtn.addEventListener('click', async () => {
-                    updateAclInformation();
-
-                    const permissionUser = document.querySelector('#btnspan-storagepool-permissions-edit-user-` + filesystem.id + `').getAttribute('data-field-value');
-                    const permissionGroup = document.querySelector('#btnspan-storagepool-permissions-edit-group-` + filesystem.id + `').getAttribute('data-field-value');
-
-                    let recursive = recursivePermissions.checked;
-
-                    if (opType === 'unix') {
-                        let info = unixBasedPermissionData;
-                        let commands = {
-                            execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
-                            permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
-                            owner: ['chown', recursive ? '-R' : null, \`\${permissionUser}:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
-                        };
-
-                        try {
-                            if (info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
-                            await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
-                            await cockpit.spawn(commands.owner, { err: 'out', superuser: 'require', });
-
-                            FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
-                        } catch (error) {
-                            FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
-                            console.error(error);
+                    function updateAclInformation() {
+                        if (aclTypeUnix.checked) {
+                            unixBasedPermissionData = {
+                                owner: aclUnixOwner.value,
+                                group: aclUnixGroup.value,
+                                other: aclUnixOther.value,
+                                execute: aclUnixExecute.checked,
+                            };
+                        } else if (aclTypeMac.checked) {
+                            unixBasedPermissionData = {
+                                owner: aclMacOwner.value,
+                                group: aclMacGroup.value,
+                                other: aclMacOther.value,
+                                execute: aclMacExecute.checked,
+                            };
                         }
                     }
+
+                    aclTypeUnix.addEventListener('input', event => {
+                        opType = 'unix';
+
+                        if (event.target.checked) {
+                            aclUnixWrapper.style.display = 'flex';
+                        } else {
+                            aclUnixWrapper.style.display = 'none';
+                        }
+                    });
+
+                    aclTypeWindows.addEventListener('input', event => {
+
+                    });
+
+                    aclTypeMac.addEventListener('input', event => {
+                        opType = 'unix';
+
+                        if (event.target.checked) {
+                            aclMacWrapper.style.display = 'flex';
+                        } else {
+                            aclMacWrapper.style.display = 'none';
+                        }
+                    });
+
+                    permissionsUpdateBtn.addEventListener('click', async () => {
+                        updateAclInformation();
+
+                        const permissionUser = document.querySelector('#btnspan-storagepool-permissions-edit-user-` + filesystem.id + `').getAttribute('data-field-value');
+                        const permissionGroup = document.querySelector('#btnspan-storagepool-permissions-edit-group-` + filesystem.id + `').getAttribute('data-field-value');
+
+                        let recursive = recursivePermissions.checked;
+
+                        if (opType === 'unix') {
+                            let info = unixBasedPermissionData;
+                            let commands = {
+                                execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
+                                permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
+                                owner: ['chown', recursive ? '-R' : null, \`\${permissionUser}:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
+                            };
+
+                            try {
+                                if (info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
+                                await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
+                                await cockpit.spawn(commands.owner, { err: 'out', superuser: 'require', });
+
+                                FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                            } catch (error) {
+                                FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                                console.error(error);
+                            }
+                        }
+                    });
                 });
             </script>
         </div>
