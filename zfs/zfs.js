@@ -11105,7 +11105,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
     disks.lsblk = JSON.parse(disks.lsblkjson);
     disks.regexp = {};
     disks.lsblk.blockdevices.forEach((_value, _index) => {
-        if (_value.type == "disk" && !_value.model.includes("HDSTOR")) {
+        if (_value.type == "disk" && !_value.model?.includes("HDSTOR")) {
             let disk = {
                 id: {
                     blockdevice: "",
@@ -11207,7 +11207,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                         <label class="select-ct-disk-row">
                             <input name="checkbox-` + modal.name + modal.id + `" data-disk-name="` + (disk.id.wwn ? disk.id.wwn : disk.id.blockdevice) + `" data-disk-id-blockdevice="` + disk.id.blockdevice + `" data-disk-id-disk="` + (disk.id.disk ? disk.id.disk : "") + `" data-disk-id-path="` + (disk.id.path ? disk.id.path : "") + `" data-disk-id-vdev="` + (disk.id.vdev ? disk.id.vdev : "") + `" data-disk-id-wwn="` + (disk.id.wwn ? disk.id.wwn : "") + `" tabindex="` + (_index + 100) + `" type="checkbox">
                             <span>
-                                ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + _value.model + (_value.serial ? " (" + _value.serial + ")" : "") + `
+                                ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + (_value.model ?? 'Unknown Model') + (_value.serial ? " (" + _value.serial + ")" : "") + `
                                 <span class="select-ct-disk-row-id">` + (!disk.id.wwn ? "/dev/" + disk.id.blockdevice : disk.id.wwn) + `</span>
                                 <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy-sec"] }) + `</span>
                             </span>
@@ -13695,7 +13695,11 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                         </div>
                         <label class="control-label">Disks WWN</label>
                         <div role="group">
-                            <label id="switch-storagepools-create-disks-wwn" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="3" type="checkbox"><span class="switch-toggle"></span></label><span></span>
+                            <label id="switch-storagepools-create-disks-wwn" class="onoff-ct privileged-modal">
+                                <input checked="checked" tabIndex="3" type="checkbox">
+                                <span class="switch-toggle"></span>
+                            </label>
+                            <span></span>
                         </div>
                         <label id="controllabel-storagepools-create-disks-identifier" class="control-label hidden">Disks Identifier</label>
                         <div id="validationwrapper-storagepools-create-disks-identifier" class="ct-validation-wrapper hidden">
@@ -13705,10 +13709,10 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                                     <div class="caret"></div>
                                 </button>
                                 <ul id="dropdown-storagepools-create-disks-identifier" class="dropdown-menu">
+                                    <li value="vdev"><a tabindex="-1">Device Alias</a></li>
                                     <li value="blockdevice"><a tabindex="-1">Block Device</a></li>
                                     <li value="disk"><a tabindex="-1">Disk</a></li>
                                     <li value="path"><a tabindex="-1">Hardware Path</a></li>
-                                    <li class="active" value="vdev"><a tabindex="-1">Device Alias</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -13880,9 +13884,9 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
             });
 
             $("#switch-storagepools-create-disks-wwn input").on("click", function () {
-                $("#btnspan-storagepools-create-disks-identifier").text("Block Device");
+                $("#btnspan-storagepools-create-disks-identifier").text("Device Alias");
                 $("#dropdown-storagepools-create-disks-identifier li").siblings().removeClass("active");
-                $("#dropdown-storagepools-create-disks-identifier li[value='blockdevice']").addClass("active");
+                $("#dropdown-storagepools-create-disks-identifier li[value='vdev']").addClass("active");
                 $("#helpblock-storagepools-create-disks-identifierwarning").addClass("hidden").text("");
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepools-create-disks-identifierwarningzfs").addClass("hidden");` : ``) + `
 
@@ -13910,6 +13914,8 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                     }
                 });
             });
+
+            $("#switch-storagepools-create-disks-wwn input").click();
 
             $("#btn-storagepools-create-apply").on("click", function () {
                 $("#spinner-storagepools-create").removeClass("hidden");
@@ -21592,10 +21598,6 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                         </div>
                     </div>
 
-                    <div class="mt-2">
-                        <h6 class="modal-title">ACL Type <a data-placement="right" data-toggle="tooltip" tabindex="-1" title="INFO HERE"><span class="fa fa-lg fa-info-circle"></span></a></h6>
-                    </div>
-
                     <div class="ct-form">
                         <label class="control-label">Unix</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
@@ -21625,45 +21627,6 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                         <label class="control-label">Execute</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
                             <input id="input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
-                        </div>
-                    </div>
-
-                    <div class="ct-form">
-                        <label class="control-label">Windows</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
-                        </div>
-                    </div>
-
-                    <div class="ct-form">
-                        <label class="control-label">Mac</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
-                        </div>
-                    </div>
-
-                    <div class="ct-form" id="wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `">
-                        <label class="control-label">Owner</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
-                        </div>
-
-                        <label class="control-label">Group</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-mac-group-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
-                        </div>
-
-                        <label class="control-label">Other</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-mac-other-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
-                        </div>
-
-                        <label class="control-label">Execute</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
                         </div>
                     </div>
 
@@ -21729,38 +21692,26 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
             </div>
 
             <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
-                (() => {
-                    // OGO/E
+                (() => {                    
                     const aclUnixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `');
-                    const aclMacWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-mac-acl-` + filesystem.id + `');
 
                     const aclUnixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
                     const aclUnixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
                     const aclUnixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
                     const aclUnixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
 
-                    const aclMacOwner = document.querySelector('#input-storagepool-permissions-edit-mac-owner-` + filesystem.id + `');
-                    const aclMacGroup = document.querySelector('#input-storagepool-permissions-edit-mac-group-` + filesystem.id + `');
-                    const aclMacOther = document.querySelector('#input-storagepool-permissions-edit-mac-other-` + filesystem.id + `');
-                    const aclMacExecute = document.querySelector('#input-storagepool-permissions-edit-mac-execute-` + filesystem.id + `');
-
                     // Path
                     const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
                     
                     // ACL Type Select
                     const aclTypeUnix = document.querySelector('#input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `');
-                    const aclTypeWindows = document.querySelector('#input-storagepool-permissions-edit-acl-windows-` + filesystem.id + `');
-                    const aclTypeMac = document.querySelector('#input-storagepool-permissions-edit-acl-mac-` + filesystem.id + `');
                     
                     // Allow User/Group Select
-                    // document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
-                    // document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
                     const recursivePermissions = document.querySelector('#input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `');
 
                     const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
 
                     aclUnixWrapper.style.display = 'none';
-                    aclMacWrapper.style.display = 'none';
 
                     $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
                         $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
@@ -21785,41 +21736,25 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                                 other: aclUnixOther.value,
                                 execute: aclUnixExecute.checked,
                             };
-                        } else if (aclTypeMac.checked) {
-                            unixBasedPermissionData = {
-                                owner: aclMacOwner.value,
-                                group: aclMacGroup.value,
-                                other: aclMacOther.value,
-                                execute: aclMacExecute.checked,
-                            };
                         }
                     }
 
-                    aclTypeUnix.addEventListener('input', event => {
+                    const aclUnix = target => {
                         opType = 'unix';
 
-                        if (event.target.checked) {
+                        if (target.checked) {
                             aclUnixWrapper.style.display = 'flex';
                         } else {
                             aclUnixWrapper.style.display = 'none';
                         }
-                    });
+                    };
 
-                    aclTypeWindows.addEventListener('input', event => {
-
-                    });
-
-                    aclTypeMac.addEventListener('input', event => {
-                        opType = 'unix';
-
-                        if (event.target.checked) {
-                            aclMacWrapper.style.display = 'flex';
-                        } else {
-                            aclMacWrapper.style.display = 'none';
-                        }
-                    });
+                    aclTypeUnix.addEventListener('input', event => aclUnix(event.target));
 
                     permissionsUpdateBtn.addEventListener('click', async () => {
+                        $("#spinner-storagepool-permissions-edit-${filesystem.id}").removeClass("hidden");
+                        $("#spinner-storagepool-permissions-edit-${filesystem.id} span").text("Updating dataset permissions...");
+
                         updateAclInformation();
 
                         const permissionUser = document.querySelector('#btnspan-storagepool-permissions-edit-user-` + filesystem.id + `').getAttribute('data-field-value');
@@ -21847,7 +21782,12 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                             }
                         }
                     });
-                });
+
+                    setTimeout(() => {
+                        aclTypeUnix.checked = true;
+                        aclUnix(aclTypeUnix);
+                    }, 10);
+                })();
             </script>
         </div>
     `;
