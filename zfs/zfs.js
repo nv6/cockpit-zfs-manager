@@ -11103,8 +11103,9 @@ function FnDisksAvailableGet(modal = { name, id, default: true }) {
 
 function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { device: [], path: [], vdev: [] }, lsblkjson }, modal = { name, id, default: true }) {
     disks.lsblk = JSON.parse(disks.lsblkjson);
+
     disks.regexp = {};
-    disks.lsblk.blockdevices.forEach((_value, _index) => {
+    let deviceData = disks.lsblk.blockdevices.map((_value, _index) => {
         if (_value.type == "disk" && !_value.model?.includes("HDSTOR")) {
             let disk = {
                 id: {
@@ -11202,13 +11203,15 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                     }
                 });
 
-                disks.output = `
+                disk.primary = disk.id.vdev ? disk.id.vdev : `/dev/${disk.id.blockdevice}`;
+
+                disk.output = `
                     <li class="list-group-item hidden">
                         <label class="select-ct-disk-row">
                             <input name="checkbox-` + modal.name + modal.id + `" data-disk-name="` + (disk.id.wwn ? disk.id.wwn : disk.id.blockdevice) + `" data-disk-id-blockdevice="` + disk.id.blockdevice + `" data-disk-id-disk="` + (disk.id.disk ? disk.id.disk : "") + `" data-disk-id-path="` + (disk.id.path ? disk.id.path : "") + `" data-disk-id-vdev="` + (disk.id.vdev ? disk.id.vdev : "") + `" data-disk-id-wwn="` + (disk.id.wwn ? disk.id.wwn : "") + `" tabindex="` + (_index + 100) + `" type="checkbox">
                             <span>
                                 ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + (_value.model ?? 'Unknown Model') + (_value.serial ? " (" + _value.serial + ")" : "") + `
-                                <span class="select-ct-disk-row-id">` + (!disk.id.wwn ? "/dev/" + disk.id.blockdevice : disk.id.wwn) + `</span>
+                                <span class="select-ct-disk-row-id">` + disk.primary + `</span>
                                 <span class="select-ct-pool-row-physec">Physical Sector Size: ` + FnFormatBytes({ base2: true, decimals: 0, value: _value["phy-sec"] }) + `</span>
                             </span>
                             <span>` + disk.warningicon + `</span>
@@ -11216,10 +11219,21 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                     </li>
                 `;
 
-                $("#listgroup-" + modal.name + modal.id).append(disks.output);
+                return disk;
+
             }
         }
+    }).filter(x => x !== undefined);
+
+    let devicePrimaryTags = deviceData.map(dev => dev.primary).sort();
+
+    let deviceOutput = [];
+
+    devicePrimaryTags.forEach(x => {
+        deviceOutput.push(deviceData.find(y => y.primary === x)?.output);
     });
+
+    $("#listgroup-" + modal.name + modal.id).append(deviceOutput.join(''));
 
     setTimeout(function () {
         $("#spinner-" + modal.name + modal.id).remove();
@@ -13693,8 +13707,7 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                                 </ul>
                             </div>
                         </div>
-                        <label class="control-label">Disks WWN</label>
-                        <div role="group">
+                        <div class="opaque-hidden" role="group">
                             <label id="switch-storagepools-create-disks-wwn" class="onoff-ct privileged-modal">
                                 <input checked="checked" tabIndex="3" type="checkbox">
                                 <span class="switch-toggle"></span>

@@ -7194,3 +7194,11 @@ pf-c-empty-state .pf-c-button.pf-m-primary.slim {
 h6.modal-title {
     font-size: 14px;
 }
+
+.opaque-hidden {
+    opacity: 0;
+    z-index: -10;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
