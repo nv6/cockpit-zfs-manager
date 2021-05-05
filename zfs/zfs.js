@@ -19373,8 +19373,7 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
                         <div class="ct-validation-wrapper">
                             <div>` + virtualdevice.id + ` (` + modal.tiername + `)</div>
                         </div>
-                        <label class="control-label">Disks WWN</label>
-                        <div role="group">
+                        <div role="group" class="opaque-hidden">
                             <label id="switch-storagepool-status-disk-attach-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + `" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="1" type="checkbox"><span class="switch-toggle"></span></label><span></span>
                         </div>
                         <label id="controllabel-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="control-label hidden">Disks Identifier</label>
@@ -19421,9 +19420,9 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
 
         \x3Cscript nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
             $("#switch-storagepool-status-disk-attach-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").on("click", function () {
-                $("#btnspan-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Block Device");
+                $("#btnspan-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Device Alias");
                 $("#dropdown-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li").siblings().removeClass("active");
-                $("#dropdown-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='blockdevice']").addClass("active");
+                $("#dropdown-storagepool-status-disk-attach-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='vdev']").addClass("active");
                 $("#helpblock-storagepool-status-disk-attach-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden").text("");
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-disk-attach-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
@@ -19451,6 +19450,8 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
                     }
                 });
             });
+
+            $("#switch-storagepool-status-disk-attach-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").click();
 
             $("#btn-storagepool-status-disk-attach-apply-` + pool.status.config.items.index + `-` + pool.id + `").on("click", function () {
                 $("#spinner-storagepool-status-disk-attach-` + pool.status.config.items.index + `-` + pool.id + `").removeClass("hidden");
@@ -19864,8 +19865,7 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                         <div class="ct-validation-wrapper">
                             <div class="modal-ct-name">` + disk.id + `</div>
                         </div>
-                        <label class="control-label">Disks WWN</label>
-                        <div role="group">
+                        <div role="group" class="opaque-hidden">
                             <label id="switch-storagepool-status-disk-replace-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + `" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="1" type="checkbox"><span class="switch-toggle"></span></label><span></span>
                         </div>
                         <label id="controllabel-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="control-label hidden">Disks Identifier</label>
@@ -19912,9 +19912,9 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
 
         \x3Cscript nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
             $("#switch-storagepool-status-disk-replace-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").on("click", function () {
-                $("#btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Block Device");
+                $("#btnspan-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Device Alias");
                 $("#dropdown-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li").siblings().removeClass("active");
-                $("#dropdown-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='blockdevice']").addClass("active");
+                $("#dropdown-storagepool-status-disk-replace-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='vdev']").addClass("active");
                 $("#helpblock-storagepool-status-disk-replace-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden").text("");
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-disk-replace-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
@@ -19942,6 +19942,8 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                     }
                 });
             });
+
+            $("#switch-storagepool-status-disk-replace-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").click();
 
             $("#btn-storagepool-status-disk-replace-apply-` + pool.status.config.items.index + `-` + pool.id + `").on("click", function () {
                 $("#spinner-storagepool-status-disk-replace-` + pool.status.config.items.index + `-` + pool.id + `").removeClass("hidden");
@@ -20512,8 +20514,7 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                         <div class="hidden" role="group">
                             <label id="switch-storagepool-status-virtualdevice-add-special-mirror-` + pool.status.config.items.index + `-` + pool.id + `" class="onoff-ct privileged-modal"><input tabIndex="4" type="checkbox"><span class="switch-toggle"></span></label><span></span>
                         </div>
-                        <label class="control-label">Disks WWN</label>
-                        <div role="group">
+                        <div role="group" class="opaque-hidden">
                             <label id="switch-storagepool-status-virtualdevice-add-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + `" class="onoff-ct privileged-modal"><input checked="checked" tabIndex="5" type="checkbox"><span class="switch-toggle"></span></label><span></span>
                         </div>
                         <label id="controllabel-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `" class="control-label hidden">Disks Identifier</label>
@@ -20560,9 +20561,9 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
 
         \x3Cscript nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
             $("#switch-storagepool-status-virtualdevice-add-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").on("click", function () {
-                $("#btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Block Device");
+                $("#btnspan-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + `").text("Device Alias");
                 $("#dropdown-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li").siblings().removeClass("active");
-                $("#dropdown-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='blockdevice']").addClass("active");
+                $("#dropdown-storagepool-status-virtualdevice-add-disks-identifier-` + pool.status.config.items.index + `-` + pool.id + ` li[value='vdev']").addClass("active");
                 $("#helpblock-storagepool-status-virtualdevice-add-disks-identifierwarning-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden").text("");
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-virtualdevice-add-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
@@ -20590,6 +20591,8 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                     }
                 });
             });
+
+            $("#switch-storagepool-status-virtualdevice-add-disks-wwn-` + pool.status.config.items.index + `-` + pool.id + ` input").click();
 
             $("#btn-storagepool-status-virtualdevice-add-apply-` + pool.status.config.items.index + `-` + pool.id + `").on("click", function () {
                 $("#spinner-storagepool-status-virtualdevice-add-` + pool.status.config.items.index + `-` + pool.id + `").removeClass("hidden");
@@ -21588,10 +21591,10 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
     try {
         users = await cockpit.spawn(['getent', 'passwd'], { err: 'out', superuser: 'require', });
-        users = users.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000).map(l => ({ name: l[0], id: Number(l[2]), }));
+        users = users.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000 || l[2] == 0).map(l => ({ name: l[0], id: Number(l[2]), }));
 
         groups = await cockpit.spawn(['getent', 'group'], { err: 'out', superuser: 'require', });
-        groups = groups.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000).map(l => ({ name: l[0], id: Number(l[2]), }));
+        groups = groups.split('\n').map(l => l.split(':')).filter(l => Number(l[2]) >= 1000 || l[2] == 0).map(l => ({ name: l[0], id: Number(l[2]), }));
     } catch (error) {
         console.error(error);
     }
@@ -21612,13 +21615,13 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     </div>
 
                     <div class="ct-form">
-                        <label class="control-label">Unix</label>
+                        <label class="control-label">Apply Mode</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" name="acl-type" type="radio">
+                            <input id="input-storagepool-permissions-edit-apply-mode-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
                         </div>
                     </div>
 
-                    <div class="ct-form" id="wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `">
+                    <div class="ct-form" id="wrapper-storagepool-permissions-edit-unix-` + filesystem.id + `">
                         <label class="control-label">Owner</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
                             <input id="input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
@@ -21646,10 +21649,10 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     <div class="mt-2 w-100"></div>
                         
                     <div class="ct-form">
-                        <!-- <label class="control-label">Apply User</label>
+                        <label class="control-label">Apply User</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
                             <input id="input-storagepool-permissions-edit-apply-user-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
-                        </div> -->
+                        </div>
 
                         <label class="control-label">User</label>
                         <div class="ct-validation-wrapper">
@@ -21664,10 +21667,10 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                             </div>
                         </div>
 
-                        <!-- <label class="control-label">Apply Group</label>
+                        <label class="control-label">Apply Group</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
                             <input id="input-storagepool-permissions-edit-apply-group-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
-                        </div> -->
+                        </div>
 
                         <label class="control-label">Group</label>
                         <div class="ct-validation-wrapper">
@@ -21705,26 +21708,25 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
             </div>
 
             <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
-                (() => {                    
-                    const aclUnixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-acl-` + filesystem.id + `');
+                (() => {
+                    const unixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-` + filesystem.id + `');
 
-                    const aclUnixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
-                    const aclUnixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
-                    const aclUnixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
-                    const aclUnixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
+                    const unixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
+                    const unixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
+                    const unixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
+                    const unixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
 
                     // Path
                     const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
                     
-                    // ACL Type Select
-                    const aclTypeUnix = document.querySelector('#input-storagepool-permissions-edit-acl-unix-` + filesystem.id + `');
-                    
                     // Allow User/Group Select
+                    const applyMode = document.querySelector('#input-storagepool-permissions-edit-apply-mode-` + filesystem.id + `');
+                    const applyUser = document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
+                    const applyGroup = document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
+                    
                     const recursivePermissions = document.querySelector('#input-storagepool-permissions-edit-apply-permissions-recursively-` + filesystem.id + `');
 
                     const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
-
-                    aclUnixWrapper.style.display = 'none';
 
                     $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
                         $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
@@ -21738,31 +21740,22 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                         $(this).parent().addClass("active");
                     });
 
-                    let opType = '';
-                    let unixBasedPermissionData = {};
+                    let permissionData = {};
 
                     function updateAclInformation() {
-                        if (aclTypeUnix.checked) {
-                            unixBasedPermissionData = {
-                                owner: aclUnixOwner.value,
-                                group: aclUnixGroup.value,
-                                other: aclUnixOther.value,
-                                execute: aclUnixExecute.checked,
-                            };
-                        }
+                        permissionData = {
+                            owner: unixOwner.value,
+                            group: unixGroup.value,
+                            other: unixOther.value,
+                            execute: unixExecute.checked,
+                            
+                            updateMode: applyMode.checked,
+                            updateUser: applyUser.checked,
+                            updateGroup: applyGroup.checked,
+                        };
                     }
 
-                    const aclUnix = target => {
-                        opType = 'unix';
-
-                        if (target.checked) {
-                            aclUnixWrapper.style.display = 'flex';
-                        } else {
-                            aclUnixWrapper.style.display = 'none';
-                        }
-                    };
-
-                    aclTypeUnix.addEventListener('input', event => aclUnix(event.target));
+                    unixWrapper.style.display = 'flex';
 
                     permissionsUpdateBtn.addEventListener('click', async () => {
                         $("#spinner-storagepool-permissions-edit-${filesystem.id}").removeClass("hidden");
@@ -21775,31 +21768,27 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                         let recursive = recursivePermissions.checked;
 
-                        if (opType === 'unix') {
-                            let info = unixBasedPermissionData;
-                            let commands = {
-                                execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
-                                permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
-                                owner: ['chown', recursive ? '-R' : null, \`\${permissionUser}:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
-                            };
+                        let info = permissionData;
 
-                            try {
-                                if (info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
-                                await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
-                                await cockpit.spawn(commands.owner, { err: 'out', superuser: 'require', });
+                        let commands = {
+                            execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
+                            permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
+                            user: ['chown', recursive ? '-R' : null, permissionUser, permissionsPath.value].filter(a => a !== null),
+                            group: ['chown', recursive ? '-R' : null, \`:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
+                        };
 
-                                FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
-                            } catch (error) {
-                                FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
-                                console.error(error);
-                            }
+                        try {
+                            if (info.updateMode) await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
+                            if (info.updateMode && info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
+                            if (info.updateUser) await cockpit.spawn(commands.user, { err: 'out', superuser: 'require', });
+                            if (info.updateGroup) await cockpit.spawn(commands.group, { err: 'out', superuser: 'require', });
+
+                            FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                        } catch (error) {
+                            FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
+                            console.error(error);
                         }
                     });
-
-                    setTimeout(() => {
-                        aclTypeUnix.checked = true;
-                        aclUnix(aclTypeUnix);
-                    }, 10);
                 })();
             </script>
         </div>
