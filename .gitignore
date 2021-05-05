@@ -7,3 +7,4 @@ debian/.debhelper
 
 # docker builds
 dist
+upload.sh

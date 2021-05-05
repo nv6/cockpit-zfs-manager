@@ -21788,6 +21788,8 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                             FnDisplayAlert({ status: "danger", title: "Permissions could not be updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
                             console.error(error);
                         }
+
+                        $('${modal.tag}').modal('hide');
                     });
                 })();
             </script>
