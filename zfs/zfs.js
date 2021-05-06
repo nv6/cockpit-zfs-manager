@@ -11208,7 +11208,7 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
                 disk.output = `
                     <li class="list-group-item hidden">
                         <label class="select-ct-disk-row">
-                            <input name="checkbox-` + modal.name + modal.id + `" data-disk-name="` + (disk.id.wwn ? disk.id.wwn : disk.id.blockdevice) + `" data-disk-id-blockdevice="` + disk.id.blockdevice + `" data-disk-id-disk="` + (disk.id.disk ? disk.id.disk : "") + `" data-disk-id-path="` + (disk.id.path ? disk.id.path : "") + `" data-disk-id-vdev="` + (disk.id.vdev ? disk.id.vdev : "") + `" data-disk-id-wwn="` + (disk.id.wwn ? disk.id.wwn : "") + `" tabindex="` + (_index + 100) + `" type="checkbox">
+                            <input name="checkbox-` + modal.name + modal.id + `" data-disk-name="` + (disk.id.vdev ? disk.id.vdev : disk.id.wwn ? disk.id.wwn : disk.id.blockdevice) + `" data-disk-id-blockdevice="` + disk.id.blockdevice + `" data-disk-id-disk="` + (disk.id.disk ? disk.id.disk : "") + `" data-disk-id-path="` + (disk.id.path ? disk.id.path : "") + `" data-disk-id-vdev="` + (disk.id.vdev ? disk.id.vdev : "") + `" data-disk-id-wwn="` + (disk.id.wwn ? disk.id.wwn : "") + `" tabindex="` + (_index + 100) + `" type="checkbox">
                             <span>
                                 ` + FnFormatBytes({ base2: zfsmanager.configuration.disks.base2, decimals: 2, value: _value.size }) + " " + (_value.model ?? 'Unknown Model') + (_value.serial ? " (" + _value.serial + ")" : "") + `
                                 <span class="select-ct-disk-row-id">` + disk.primary + `</span>
@@ -13904,8 +13904,8 @@ function FnModalStoragePoolsCreateContent(modal = { id }) {
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepools-create-disks-identifierwarningzfs").addClass("hidden");` : ``) + `
 
                 let disk = {
-                    identifier: ($(this).prop("checked") ? "wwn" : "blockdevice"),
-                    identifiertext: ($(this).prop("checked") ? "WWN" : "Block Device")
+                    identifier: ($(this).prop("checked") ? "wwn" : "vdev"),
+                    identifiertext: ($(this).prop("checked") ? "WWN" : "Device Alias")
                 };
 
                 if ($(this).prop("checked")) {
@@ -19427,8 +19427,8 @@ function FnModalStatusDiskAttachContent(pool = { name, id, status: { config: { i
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-disk-attach-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
                 let disk = {
-                    identifier: ($(this).prop("checked") ? "wwn" : "blockdevice"),
-                    identifiertext: ($(this).prop("checked") ? "WWN" : "Block Device")
+                    identifier: ($(this).prop("checked") ? "wwn" : "vdev"),
+                    identifiertext: ($(this).prop("checked") ? "WWN" : "Device Alias")
                 };
 
                 if ($(this).prop("checked")) {
@@ -19919,8 +19919,8 @@ function FnModalStatusDiskReplaceContent(pool = { name, id, status: { config: { 
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-disk-replace-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
                 let disk = {
-                    identifier: ($(this).prop("checked") ? "wwn" : "blockdevice"),
-                    identifiertext: ($(this).prop("checked") ? "WWN" : "Block Device")
+                    identifier: ($(this).prop("checked") ? "wwn" : "vdev"),
+                    identifiertext: ($(this).prop("checked") ? "WWN" : "Device Alias")
                 };
 
                 if ($(this).prop("checked")) {
@@ -20568,8 +20568,8 @@ function FnModalStatusVirtualDeviceAddContent(pool = { name, id, feature: { allo
                 ` + (zfsmanager.zfs.warnings.nvmevdev ? `$("#helpblock-storagepool-status-virtualdevice-add-disks-identifierwarningzfs-` + pool.status.config.items.index + `-` + pool.id + `").addClass("hidden");` : ``) + `
 
                 let disk = {
-                    identifier: ($(this).prop("checked") ? "wwn" : "blockdevice"),
-                    identifiertext: ($(this).prop("checked") ? "WWN" : "Block Device")
+                    identifier: ($(this).prop("checked") ? "wwn" : "vdev"),
+                    identifiertext: ($(this).prop("checked") ? "WWN" : "Device Alias")
                 };
 
                 if ($(this).prop("checked")) {
