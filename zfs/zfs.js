@@ -21617,7 +21617,7 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     <div class="ct-form">
                         <label class="control-label">Apply Mode</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-apply-mode-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                            <input id="input-storagepool-permissions-edit-apply-mode-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox" checked>
                         </div>
                     </div>
 
@@ -21651,37 +21651,39 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     <div class="ct-form">
                         <label class="control-label">Apply User</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-apply-user-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                            <input id="input-storagepool-permissions-edit-apply-user-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox" checked>
                         </div>
 
+                        <input type="hidden" class="hidden" id="meta-storagepool-permissions-edit-users-${filesystem.id}" value="${JSON.stringify(users).replace(/"/g, '&quot;')}">
+
                         <label class="control-label">User</label>
+                        
                         <div class="ct-validation-wrapper">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
-                                    <span id="btnspan-storagepool-permissions-edit-user-` + filesystem.id + `" class="pull-left" data-field-value="${users[0].name}">${users[0].name}</span>
+                                    <input class="pf-c-form-control pf-c-select__toggle-typeahead" type="text" id="input-storagepool-permissions-edit-user-filter-${filesystem.id}" aria-label="Type to filter" placeholder="--" />
                                     <div class="caret"></div>
                                 </button>
-                                <ul id="dropdown-storagepool-permissions-edit-user-` + filesystem.id + `" class="dropdown-menu">
-                                    ${users.map(u => `<li value="${u.name}"><a tabindex="-1">${u.name}</a></li>`).join('')}
-                                </ul>
+                                <ul id="dropdown-storagepool-permissions-edit-user-${filesystem.id}" class="dropdown-menu"></ul>
                             </div>
                         </div>
 
                         <label class="control-label">Apply Group</label>
                         <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-apply-group-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                            <input id="input-storagepool-permissions-edit-apply-group-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox" checked>
                         </div>
 
+                        <input type="hidden" class="hidden" id="meta-storagepool-permissions-edit-groups-${filesystem.id}" value="${JSON.stringify(groups).replace(/"/g, '&quot;')}">
+
                         <label class="control-label">Group</label>
+                        
                         <div class="ct-validation-wrapper">
                             <div class="btn-group bootstrap-select dropdown form-control privileged-modal">
                                 <button aria-expanded="false" class="btn btn-default dropdown-toggle" data-toggle="dropdown" tabIndex="1" type="button">
-                                    <span id="btnspan-storagepool-permissions-edit-group-` + filesystem.id + `" class="pull-left" data-field-value="${groups[0].name}">${groups[0].name}</span>
+                                    <input class="pf-c-form-control pf-c-select__toggle-typeahead" type="text" id="input-storagepool-permissions-edit-group-filter-${filesystem.id}" aria-label="Type to filter" placeholder="--" />
                                     <div class="caret"></div>
                                 </button>
-                                <ul id="dropdown-storagepool-permissions-edit-group-` + filesystem.id + `" class="dropdown-menu">
-                                    ${groups.map(g => `<li value="${g.name}"><a tabindex="-1">${g.name}</a></li>`).join('')}
-                                </ul>
+                                <ul id="dropdown-storagepool-permissions-edit-group-${filesystem.id}" class="dropdown-menu"></ul>
                             </div>
                         </div>
                     </div>
@@ -21716,10 +21718,11 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     const unixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
                     const unixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
 
-                    // Path
+                    const metaUsers = document.querySelector('#meta-storagepool-permissions-edit-users-${filesystem.id}');
+                    const metaGroups = document.querySelector('#meta-storagepool-permissions-edit-groups-${filesystem.id}');
+
                     const permissionsPath = document.querySelector('#input-storagepool-permissions-edit-path-` + filesystem.id + `');
                     
-                    // Allow User/Group Select
                     const applyMode = document.querySelector('#input-storagepool-permissions-edit-apply-mode-` + filesystem.id + `');
                     const applyUser = document.querySelector('#input-storagepool-permissions-edit-apply-user-` + filesystem.id + `');
                     const applyGroup = document.querySelector('#input-storagepool-permissions-edit-apply-group-` + filesystem.id + `');
@@ -21728,22 +21731,136 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     const permissionsUpdateBtn = document.querySelector('#btn-storagepool-permissions-edit-configure-run-` + filesystem.id + `');
 
-                    $("#dropdown-storagepool-permissions-edit-user-${filesystem.id}").on("click", "li a", function () {
-                        $("#btnspan-storagepool-permissions-edit-user-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
-                        $(this).parent().siblings().removeClass("active");
-                        $(this).parent().addClass("active");
+                    const usersFilter = document.querySelector('#input-storagepool-permissions-edit-user-filter-${filesystem.id}');
+                    const usersDropdown = document.querySelector('#dropdown-storagepool-permissions-edit-user-${filesystem.id}');
+
+                    const groupsFilter = document.querySelector('#input-storagepool-permissions-edit-group-filter-${filesystem.id}');
+                    const groupsDropdown = document.querySelector('#dropdown-storagepool-permissions-edit-group-${filesystem.id}');
+
+                    const users = JSON.parse(metaUsers.value);
+
+                    for (let i = 0; i < users.length; i += 1) {
+                        let classAttribute = '';
+
+                        if (i === 0) {
+                            usersFilter.placeholder = users[i].name;
+                            classAttribute = ' class="active"';
+                        }
+
+                        usersDropdown.innerHTML += \`<li data-value="\${users[i].name}"\${classAttribute}><a tabindex="-1">\${users[i].name}</a></li>\`;
+                    }
+
+                    const updateUserDropdown = (updateSelected = false) => {
+                        const searchText = usersFilter.value.toLowerCase();
+
+                        const userList = document.querySelectorAll('#dropdown-storagepool-permissions-edit-user-${filesystem.id} > li');
+
+                        let defaultSet = false;
+
+                        for (let i = 0; i < userList.length; i += 1) {
+                            const element = userList[i];
+                            const value = element.dataset.value;
+
+                            if (!value.includes(searchText) && searchText != '') {
+                                element.style.display = 'none';
+                            } else {
+                                element.style.display = 'block';
+
+                                if (!defaultSet && updateSelected) {
+                                    usersFilter.placeholder = element.dataset.value;
+                                    $(element).siblings().removeClass("active");
+                                    $(element).addClass("active");
+
+                                    defaultSet = true;
+                                }
+                            }
+                        }
+                    };
+
+                    usersDropdown.addEventListener('click', event => {
+                        usersFilter.placeholder = event.target.parentElement.dataset.value;
+                        usersFilter.value = '';
+
+                        [...event.target.parentElement.parentElement.children]
+                            .forEach(el => el.classList.remove('active'));
+
+                        event.target.parentElement.classList.add('active');
                     });
 
-                    $("#dropdown-storagepool-permissions-edit-group-${filesystem.id}").on("click", "li a", function () {
-                        $("#btnspan-storagepool-permissions-edit-group-${filesystem.id}").text($(this).text()).attr("data-field-value", $(this).parent().attr("value"));
-                        $(this).parent().siblings().removeClass("active");
-                        $(this).parent().addClass("active");
+                    usersFilter.addEventListener('click', event => {
+                        setTimeout(() => event.target.focus(), 1);
                     });
 
-                    let permissionData = {};
+                    usersFilter.addEventListener('blur', event => {
+                        usersFilter.value = '';
+                        updateUserDropdown();
+                    });
 
-                    function updateAclInformation() {
-                        permissionData = {
+                    usersFilter.addEventListener('input', () => updateUserDropdown(true));
+
+                    const groups = JSON.parse(metaGroups.value);
+
+                    for (let i = 0; i < groups.length; i += 1) {
+                        let classAttribute = '';
+
+                        if (i === 0) {
+                            groupsFilter.placeholder = groups[i].name;
+                            classAttribute = ' class="active"';
+                        }
+
+                        groupsDropdown.innerHTML += \`<li data-value="\${groups[i].name}"\${classAttribute}><a tabindex="-1">\${groups[i].name}</a></li>\`;
+                    }
+
+                    const updateGroupDropdown = (updateSelected = false) => {
+                        const searchText = groupsFilter.value.toLowerCase();
+
+                        const groupList = document.querySelectorAll('#dropdown-storagepool-permissions-edit-group-${filesystem.id} > li');
+
+                        let defaultSet = false;
+
+                        for (let i = 0; i < groupList.length; i += 1) {
+                            const element = groupList[i];
+                            const value = element.dataset.value;
+
+                            if (!value.includes(searchText) && searchText != '') {
+                                element.style.display = 'none';
+                            } else {
+                                element.style.display = 'block';
+
+                                if (!defaultSet && updateSelected) {
+                                    groupsFilter.placeholder = element.dataset.value;
+                                    $(element).siblings().removeClass("active");
+                                    $(element).addClass("active");
+
+                                    defaultSet = true;
+                                }
+                            }
+                        }
+                    };
+
+                    groupsDropdown.addEventListener('click', event => {
+                        groupsFilter.placeholder = event.target.parentElement.dataset.value;
+                        groupsFilter.value = '';
+
+                        [...event.target.parentElement.parentElement.children]
+                            .forEach(el => el.classList.remove('active'));
+
+                        event.target.parentElement.classList.add('active');
+                    });
+
+                    groupsFilter.addEventListener('click', event => {
+                        setTimeout(() => event.target.focus(), 1);
+                    });
+
+                    groupsFilter.addEventListener('blur', event => {
+                        groupsFilter.value = '';
+                        updateGroupDropdown();
+                    });
+
+                    groupsFilter.addEventListener('input', () => updateGroupDropdown(true));
+
+                    function getPermissionInformation() {
+                        return {
                             owner: unixOwner.value,
                             group: unixGroup.value,
                             other: unixOther.value,
@@ -21755,33 +21872,35 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                         };
                     }
 
+                    function getOwnerInformation() {
+                        return {
+                            user: [...usersDropdown.children].find(x => x.classList.contains('active')).dataset.value,
+                            group: [...groupsDropdown.children].find(x => x.classList.contains('active')).dataset.value,
+                        };
+                    }
+
                     unixWrapper.style.display = 'flex';
 
                     permissionsUpdateBtn.addEventListener('click', async () => {
                         $("#spinner-storagepool-permissions-edit-${filesystem.id}").removeClass("hidden");
                         $("#spinner-storagepool-permissions-edit-${filesystem.id} span").text("Updating dataset permissions...");
 
-                        updateAclInformation();
-
-                        const permissionUser = document.querySelector('#btnspan-storagepool-permissions-edit-user-` + filesystem.id + `').getAttribute('data-field-value');
-                        const permissionGroup = document.querySelector('#btnspan-storagepool-permissions-edit-group-` + filesystem.id + `').getAttribute('data-field-value');
-
-                        let recursive = recursivePermissions.checked;
-
-                        let info = permissionData;
+                        const recursive = recursivePermissions.checked;
+                        const permissionInfo = getPermissionInformation();
+                        const ownerInfo = getOwnerInformation();
 
                         let commands = {
                             execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
-                            permissions: ['chmod', recursive ? '-R' : null, \`\${info.owner}\${info.group}\${info.other}\`, permissionsPath.value].filter(a => a !== null),
-                            user: ['chown', recursive ? '-R' : null, permissionUser, permissionsPath.value].filter(a => a !== null),
-                            group: ['chown', recursive ? '-R' : null, \`:\${permissionGroup}\`, permissionsPath.value].filter(a => a !== null),
+                            permissions: ['chmod', recursive ? '-R' : null, \`\${permissionInfo.owner}\${permissionInfo.group}\${permissionInfo.other}\`, permissionsPath.value].filter(a => a !== null),
+                            user: ['chown', recursive ? '-R' : null, ownerInfo.user, permissionsPath.value].filter(a => a !== null),
+                            group: ['chown', recursive ? '-R' : null, \`:\${ownerInfo.group}\`, permissionsPath.value].filter(a => a !== null),
                         };
 
                         try {
-                            if (info.updateMode) await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
-                            if (info.updateMode && info.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
-                            if (info.updateUser) await cockpit.spawn(commands.user, { err: 'out', superuser: 'require', });
-                            if (info.updateGroup) await cockpit.spawn(commands.group, { err: 'out', superuser: 'require', });
+                            if (permissionInfo.updateMode) await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
+                            if (permissionInfo.updateMode && permissionInfo.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
+                            if (permissionInfo.updateUser) await cockpit.spawn(commands.user, { err: 'out', superuser: 'require', });
+                            if (permissionInfo.updateGroup) await cockpit.spawn(commands.group, { err: 'out', superuser: 'require', });
 
                             FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
                         } catch (error) {
