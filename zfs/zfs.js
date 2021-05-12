@@ -21779,7 +21779,7 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     usersDropdown.addEventListener('click', event => {
                         usersFilter.placeholder = event.target.parentElement.dataset.value;
-                        usersFilter.value = '';
+                        usersFilter.value = event.target.parentElement.dataset.value;
 
                         [...event.target.parentElement.parentElement.children]
                             .forEach(el => el.classList.remove('active'));
@@ -21789,11 +21789,6 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     usersFilter.addEventListener('click', event => {
                         setTimeout(() => event.target.focus(), 1);
-                    });
-
-                    usersFilter.addEventListener('blur', event => {
-                        usersFilter.value = '';
-                        updateUserDropdown();
                     });
 
                     usersFilter.addEventListener('input', () => updateUserDropdown(true));
@@ -21840,7 +21835,7 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     groupsDropdown.addEventListener('click', event => {
                         groupsFilter.placeholder = event.target.parentElement.dataset.value;
-                        groupsFilter.value = '';
+                        groupsFilter.value = event.target.parentElement.dataset.value;
 
                         [...event.target.parentElement.parentElement.children]
                             .forEach(el => el.classList.remove('active'));
@@ -21850,11 +21845,6 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     groupsFilter.addEventListener('click', event => {
                         setTimeout(() => event.target.focus(), 1);
-                    });
-
-                    groupsFilter.addEventListener('blur', event => {
-                        groupsFilter.value = '';
-                        updateGroupDropdown();
                     });
 
                     groupsFilter.addEventListener('input', () => updateGroupDropdown(true));
