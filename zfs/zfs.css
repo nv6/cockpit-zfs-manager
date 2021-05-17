@@ -7209,3 +7209,17 @@ h6.modal-title {
 .pf-c-form-control.pf-c-select__toggle-typeahead:hover {
     outline: none;
 }
+
+.three-column {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.three-column label,
+.three-column div,
+.three-column input {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

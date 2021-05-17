@@ -21622,27 +21622,54 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                     </div>
 
                     <div class="ct-form" id="wrapper-storagepool-permissions-edit-unix-` + filesystem.id + `">
-                        <label class="control-label">Owner</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        <label class="control-label">&nbsp;</label>
+
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper three-column">
+                            <label>Owner</label>
+                            <label>Group</label>
+                            <label>Other</label>
                         </div>
 
-                        <label class="control-label">Group</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-unix-group-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
-                        </div>
+                        <label class="control-label">Read</label>
 
-                        <label class="control-label">Other</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper">
-                            <input id="input-storagepool-permissions-edit-unix-other-` + filesystem.id + `" class="form-control privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="number" min="0" max="7" value="">
-                            <span id="helpblock-storagepool-permissions-edit-` + filesystem.id + `" class="help-block"></span>
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper three-column">
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-owner-read-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-group-read-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-other-read-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
                         </div>
-
+                                
+                        <label class="control-label">Write</label>
+                                
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper three-column">
+                            <div>  
+                                <input id="input-storagepool-permissions-edit-unix-owner-write-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-group-write-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-other-write-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                        </div>
+                                
                         <label class="control-label">Execute</label>
-                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `">
-                            <input id="input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `" class="privileged-modal" data-field="name" data-field-type="text-input" tabindex="2" type="checkbox">
+                                
+                        <div id="validationwrapper-storagepool-permissions-edit-` + filesystem.id + `" class="ct-validation-wrapper three-column">
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-owner-execute-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-group-execute-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
+                            <div>
+                                <input id="input-storagepool-permissions-edit-unix-other-execute-` + filesystem.id + `" class="privileged-modal" type="checkbox">
+                            </div>
                         </div>
                     </div>
 
@@ -21711,13 +21738,6 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
             <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
                 (() => {
-                    const unixWrapper = document.querySelector('#wrapper-storagepool-permissions-edit-unix-` + filesystem.id + `');
-
-                    const unixOwner = document.querySelector('#input-storagepool-permissions-edit-unix-owner-` + filesystem.id + `');
-                    const unixGroup = document.querySelector('#input-storagepool-permissions-edit-unix-group-` + filesystem.id + `');
-                    const unixOther = document.querySelector('#input-storagepool-permissions-edit-unix-other-` + filesystem.id + `');
-                    const unixExecute = document.querySelector('#input-storagepool-permissions-edit-unix-execute-` + filesystem.id + `');
-
                     const metaUsers = document.querySelector('#meta-storagepool-permissions-edit-users-${filesystem.id}');
                     const metaGroups = document.querySelector('#meta-storagepool-permissions-edit-groups-${filesystem.id}');
 
@@ -21849,48 +21869,57 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
 
                     groupsFilter.addEventListener('input', () => updateGroupDropdown(true));
 
-                    function getPermissionInformation() {
-                        return {
-                            owner: unixOwner.value,
-                            group: unixGroup.value,
-                            other: unixOther.value,
-                            execute: unixExecute.checked,
-                            
-                            updateMode: applyMode.checked,
-                            updateUser: applyUser.checked,
-                            updateGroup: applyGroup.checked,
-                        };
+                    function getModeBits(type) {
+                        const parts = [['read', 4], ['write', 2], ['execute', 1]];
+
+                        let bits = 0;
+
+                        for (let i = 0; i < parts.length; i += 1) {
+                            const [name, value] = parts[i];
+                            const input = document.querySelector(\`#input-storagepool-permissions-edit-unix-\${type}-\${name}-${filesystem.id}\`);
+
+                            if (input.checked) bits += value;
+                        }
+
+                        return bits;
                     }
 
-                    function getOwnerInformation() {
+                    function getAllInformation() {
                         return {
-                            user: [...usersDropdown.children].find(x => x.classList.contains('active')).dataset.value,
-                            group: [...groupsDropdown.children].find(x => x.classList.contains('active')).dataset.value,
+                            permissions: {
+                                owner: getModeBits('owner'),
+                                group: getModeBits('group'),
+                                other: getModeBits('other'),
+                            },
+                            owner: {
+                                user: [...usersDropdown.children].find(x => x.classList.contains('active')).dataset.value,
+                                group: [...groupsDropdown.children].find(x => x.classList.contains('active')).dataset.value,
+                            },
+                            update: {
+                                mode: applyMode.checked,
+                                user: applyUser.checked,
+                                group: applyGroup.checked,
+                            },
                         };
                     }
-
-                    unixWrapper.style.display = 'flex';
 
                     permissionsUpdateBtn.addEventListener('click', async () => {
                         $("#spinner-storagepool-permissions-edit-${filesystem.id}").removeClass("hidden");
                         $("#spinner-storagepool-permissions-edit-${filesystem.id} span").text("Updating dataset permissions...");
 
                         const recursive = recursivePermissions.checked;
-                        const permissionInfo = getPermissionInformation();
-                        const ownerInfo = getOwnerInformation();
+                        const info = getAllInformation();
 
-                        let commands = {
-                            execute: ['chmod', recursive ? '-R' : null, '+x', permissionsPath.value].filter(a => a !== null),
-                            permissions: ['chmod', recursive ? '-R' : null, \`\${permissionInfo.owner}\${permissionInfo.group}\${permissionInfo.other}\`, permissionsPath.value].filter(a => a !== null),
-                            user: ['chown', recursive ? '-R' : null, ownerInfo.user, permissionsPath.value].filter(a => a !== null),
-                            group: ['chown', recursive ? '-R' : null, \`:\${ownerInfo.group}\`, permissionsPath.value].filter(a => a !== null),
+                        const commands = {
+                            permissions: ['chmod', recursive ? '-R' : null, \`\${info.permissions.owner}\${info.permissions.group}\${info.permissions.other}\`, permissionsPath.value].filter(a => a !== null),
+                            user: ['chown', recursive ? '-R' : null, info.owner.user, permissionsPath.value].filter(a => a !== null),
+                            group: ['chgrp', recursive ? '-R' : null, info.owner.group, permissionsPath.value].filter(a => a !== null),
                         };
 
                         try {
-                            if (permissionInfo.updateMode) await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
-                            if (permissionInfo.updateMode && permissionInfo.execute) await cockpit.spawn(commands.execute, { err: 'out', superuser: 'require', });
-                            if (permissionInfo.updateUser) await cockpit.spawn(commands.user, { err: 'out', superuser: 'require', });
-                            if (permissionInfo.updateGroup) await cockpit.spawn(commands.group, { err: 'out', superuser: 'require', });
+                            if (info.update.mode) await cockpit.spawn(commands.permissions, { err: 'out', superuser: 'require', });
+                            if (info.update.user) await cockpit.spawn(commands.user, { err: 'out', superuser: 'require', });
+                            if (info.update.group) await cockpit.spawn(commands.group, { err: 'out', superuser: 'require', });
 
                             FnDisplayAlert({ status: "success", title: "Permissions updated", description: '${filesystem.name}', breakword: false }, { name: "permissions-update" });
                         } catch (error) {
