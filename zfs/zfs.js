@@ -21878,7 +21878,7 @@ async function FnModalPermissionsEditContent(pool, filesystem, modal) {
                             const [name, value] = parts[i];
                             const input = document.querySelector(\`#input-storagepool-permissions-edit-unix-\${type}-\${name}-${filesystem.id}\`);
 
-                            if (input.checked) bits += value;
+                            if (input.checked) bits |= value;
                         }
 
                         return bits;
