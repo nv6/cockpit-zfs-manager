@@ -11225,13 +11225,35 @@ function FnDisksAvailableGetCommand(disks = { attached: [], blkid: [], id: { dev
         }
     }).filter(x => x !== undefined);
 
-    let devicePrimaryTags = deviceData.map(dev => dev.primary).sort();
+    let devicePrimaryTags = deviceData.map(dev => dev.primary);
+
+    let devicePrimaryTagValues = devicePrimaryTags.map(tag => {
+        if (typeof tag !== 'string') return null;
+        if (!tag.match(/([0-9]{1,2}-[0-9]{1,2})/)) return tag;
+        const value = Number(tag.match(/[0-9]{1,}/g).map(x => x.padStart(3, '0')).join(''));
+        return value;
+    }).sort().filter(x => x !== null);
+    
+    let devAliasList = new Array(devicePrimaryTagValues.length);
+    
+    for (let i = 0; i < devicePrimaryTags.length; i++) {
+        const tag = devicePrimaryTags[i];
+    
+        if (typeof tag !== 'string') continue;
+    
+        if (!tag.match(/([0-9]{1,2}-[0-9]{1,2})/)) {
+            devAliasList[devicePrimaryTagValues.indexOf(tag)] = tag;
+            continue;
+        }
+    
+        const value = Number(tag.match(/[0-9]{1,}/g).map(x => x.padStart(3, '0')).join(''));
+    
+        devAliasList[devicePrimaryTagValues.indexOf(value)] = tag;
+    }
 
     let deviceOutput = [];
 
-    devicePrimaryTags.forEach(x => {
-        deviceOutput.push(deviceData.find(y => y.primary === x)?.output);
-    });
+    devAliasList.forEach(tag => deviceOutput.push(deviceData.find(dev => dev.primary === tag)?.output));
 
     $("#listgroup-" + modal.name + modal.id).append(deviceOutput.join(''));
 
