@@ -1,0 +1,57 @@
+{
+    "__version": "45D-R1",
+    "name": "cockpit-zfs-manager",
+    "title": "Cockpit ZFS Manager",
+    "prerelease": true,
+    "version": "1.1.1",
+    "buildVersion": "1",
+    "author": "Dawson Della Valle <ddellavalle@45drives.com>",
+    "url": "https://github.com/45Drives/cockpit-zfs-manager",
+    "category": "utils",
+    "priority": "optional",
+    "licence": "GPL-3.0+",
+    "architecture": {
+        "deb": "all",
+        "el": "noarch"
+    },
+    "description": {
+        "long": "An interactive ZFS on Linux Portal for Cockpit.",
+        "short": "An interactive ZFS on Linux Portal for Cockpit."
+    },
+    "defaults": {
+        "urgency": "medium"
+    },
+    "dependencies": {
+        "deb": [
+            "cockpit",
+            "zfs-dkms",
+            "znapzend"
+        ],
+        "el": [
+            "cockpit",
+            "zfs-dkms",
+            "znapzend"
+        ]
+    },
+    "releases": [
+        {
+            "image": "ubuntu-focal-builder",
+            "codeName": "focal",
+            "type": "deb"
+        }
+    ],
+    "changelog": {
+        "urgency": "medium",
+        "version": "1.3.0",
+        "buildVersion": "1",
+        "ignore": [],
+        "date": "2021-07-01T13:53:10.616902",
+        "packager": "Dawson Della Valle <ddellavalle@45drives.com>",
+        "changes": [
+            "Add znapzend Replication Task support at the dataset level.",
+            "Enhance methods of managing dropdown menus.",
+            "Add Dataset Permissions as a dropdown action.",
+            "Change default disk selector name to prefer aliases."
+        ]
+    }
+}

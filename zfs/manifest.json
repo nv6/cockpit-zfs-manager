@@ -7,7 +7,7 @@
   },
   "menu": {
     "index": {
-      "label": "ZFS + File Sharing",
+      "label": "ZFS",
       "order": 29,
       "docs": [
         {
