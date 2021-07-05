@@ -42,7 +42,7 @@
         {
             "image": "rocky-el8-builder",
             "codeName": "el8",
-            "type": "deb"
+            "type": "el"
         }
     ],
     "changelog": {
