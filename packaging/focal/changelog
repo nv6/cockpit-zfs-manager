@@ -1,4 +1,4 @@
-cockpit-zfs-manager (1.3.0-2focal) focal; urgency=medium
+cockpit-zfs-manager (1.3.0-3focal) focal; urgency=medium
 
   * Add EL8 packaging.
 
