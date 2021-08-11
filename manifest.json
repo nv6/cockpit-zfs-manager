@@ -48,7 +48,7 @@
     "changelog": {
         "urgency": "medium",
         "version": "1.3.0",
-        "buildVersion": "2",
+        "buildVersion": "3",
         "ignore": [],
         "date": null,
         "packager": "Dawson Della Valle <ddellavalle@45drives.com>",
