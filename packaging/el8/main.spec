@@ -26,6 +26,8 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/zfs/*
 
 %changelog
+* Mon Apr 24 2023 Brett Kelly <bkelly@45drives.com> 1.3.0-4
+- relaxed dependancy to allow zfs-kmod or zfs-dkms
 * Wed Aug 11 2021 Dawson Della Valle <ddellavalle@45drives.com> 1.3.0-3
 - Rebuild Packages.
 * Mon Jul 05 2021 Dawson Della Valle <ddellavalle@45drives.com> 1.3.0-2
