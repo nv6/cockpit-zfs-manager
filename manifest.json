@@ -24,12 +24,12 @@
     "dependencies": {
         "deb": [
             "cockpit",
-            "zfs-dkms",
+            "zfs",
             "znapzend"
         ],
         "el": [
             "cockpit",
-            "zfs-dkms",
+            "zfs",
             "znapzend"
         ]
     },
