@@ -1,3 +1,3 @@
-## Cockpit ZFS Manager 1.3.0-4
+## Cockpit ZFS Manager 1.3.0-5
 
-* relaxed dependancy to allow zfs-kmod or zfs-dkms
+* fix broken ubuntu dependency

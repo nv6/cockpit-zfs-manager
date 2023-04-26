@@ -1,3 +1,9 @@
+cockpit-zfs-manager (1.3.0-5focal) focal; urgency=medium
+
+  * fix broken ubuntu dependency
+
+ -- Brett Kelly <bkelly@45drives.com>  Wed, 26 Apr 2023 07:57:15 -0300
+
 cockpit-zfs-manager (1.3.0-4focal) focal; urgency=medium
 
   * relaxed dependancy to allow zfs-kmod or zfs-dkms
