@@ -24,7 +24,7 @@
     "dependencies": {
         "deb": [
             "cockpit",
-            "zfs",
+            "zfs-dkms",
             "znapzend"
         ],
         "el": [
