@@ -1,3 +1,9 @@
+cockpit-zfs-manager (1.3.1-1focal) focal; urgency=medium
+
+  * Fixed issue with duplicated modal screens when creating zfs replication tasks
+
+ -- Brett Kelly <bkelly@45drives.com>  Thu, 16 Nov 2023 08:42:31 -0400
+
 cockpit-zfs-manager (1.3.0-5focal) focal; urgency=medium
 
   * fix broken ubuntu dependency

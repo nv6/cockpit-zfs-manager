@@ -1,3 +1,3 @@
-## Cockpit ZFS Manager 1.3.0-5
+## Cockpit ZFS Manager 1.3.1-1
 
-* fix broken ubuntu dependency
+* Fixed issue with duplicated modal screens when creating zfs replication tasks

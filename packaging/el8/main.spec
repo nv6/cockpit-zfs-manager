@@ -26,6 +26,8 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/zfs/*
 
 %changelog
+* Thu Nov 16 2023 Brett Kelly <bkelly@45drives.com> 1.3.1-1
+- Fixed issue with duplicated modal screens when creating zfs replication tasks
 * Wed Apr 26 2023 Brett Kelly <bkelly@45drives.com> 1.3.0-5
 - fix broken ubuntu dependency
 * Mon Apr 24 2023 Brett Kelly <bkelly@45drives.com> 1.3.0-4
