@@ -4911,6 +4911,8 @@ async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: 
     $("#tbody-storagepool-filesystems-" + pool.id).empty();
     $("#modals-storagepool-filesystems-" + pool.id).remove();
     $("#modals-storagepool-filesystem-" + pool.id).remove();
+    $(`#modals-replication-tasks-${pool.id}`).remove();
+    $(`#modals-permissions-edit-${pool.id}`).remove();
     $("#modals").append(`<div id="modals-storagepool-filesystems-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-storagepool-filesystem-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
