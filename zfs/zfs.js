@@ -4248,21 +4248,6 @@ function FnStoragePoolRefreshCommand(pool = { name, id }) {
                 $("#span-storagepool-upgrade-" + pool.id).addClass("hidden");
             }
 
-            let $rtEl = $(`modals-replication-tasks-` + pool.id);
-
-            if ($rtEl.length < 1) {
-                $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
-            } else {
-                $rtEl.empty();
-            }
-
-            let $peEl = $(`modals-permissions-edit-` + pool.id);
-
-            if ($peEl.length < 1) {
-                $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
-            } else {
-                $peEl.empty();
-            }
             
             $("#div-storagepool-health-" + pool.id).empty().html(`<span class="` + pool.healthicon + `"></span> ` + pool.health);
             $("#div-storagepool-size-" + pool.id).text(pool.size);
@@ -4898,6 +4883,8 @@ function FnFileSystemsGet(pool = { name, id }) {
                 $("#tbody-storagepool-filesystems-" + pool.id).append(`<tr><td colspan="14">No file systems found.</th></tr>`);
                 $("#modals-storagepool-filesystems-" + pool.id).remove();
                 $("#modals-storagepool-filesystem-" + pool.id).remove();
+                $(`#modals-replication-tasks-${pool.id}`).remove();
+                $(`#modals-permissions-edit-${pool.id}`).remove();
                 $("#modals").append(`<div id="modals-storagepool-filesystems-` + pool.id + `"></div>`);
 
                 //Register file systems modals
@@ -4928,6 +4915,8 @@ async function FnFileSystemsGetCommand(pool = { name, id, altroot: false, boot: 
     $("#modals").append(`<div id="modals-storagepool-filesystem-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
     $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
+    // $("#modals").append(`<div id="modals-replication-tasks-` + pool.id + `"></div>`);
+    // $("#modals").append(`<div id="modals-permissions-edit-` + pool.id + `"></div>`);
 
     for (let _index = 0; _index < filesystems.length; _index++) {
         let _value = filesystems[_index];
@@ -21114,7 +21103,7 @@ function FnModalReplicationTaskCreate(pool, filesystem) {
         <script nonce="1t55lZ7tzuKTreHVNwE66Ox32Mc=">
 			$("#btn-storagepool-replication-task-configure-` + filesystem.id + `").on("click", function () {
                 FnModalReplicationTaskCreateContent({id: '${pool.id}', name: '${pool.name}'}, {id: '${filesystem.id}', name: '${filesystem.name}', replicationtask: ${filesystem.replicationtask}}, { id: $("#modal-storagepool-replication-task-configure-` + filesystem.id + `"), tag: "#modal-storagepool-replication-task-configure-` + filesystem.id + `" });
-			});
+            });
         </script>
     `;
 
