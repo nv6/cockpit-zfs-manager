@@ -23,9 +23,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 make DESTDIR=%{buildroot} install
 
 %files
-/usr/share/cockpit/zfs/*
+/usr/share/cockpit/*
 
 %changelog
+* Tue Jul 15 2025 Nivesh Varma <73319848+nv6@users.noreply.github.com> 1.3.1-2
+- change build base path to include missing fonts
 * Thu Nov 16 2023 Brett Kelly <bkelly@45drives.com> 1.3.1-1
 - Fixed issue with duplicated modal screens when creating zfs replication tasks
 * Wed Apr 26 2023 Brett Kelly <bkelly@45drives.com> 1.3.0-5

@@ -8,3 +8,7 @@ debian/.debhelper
 # docker builds
 dist
 upload.sh
+
+# extracted assets e.g. fonts
+src/**/*.woff
+src/**/*.woff2
